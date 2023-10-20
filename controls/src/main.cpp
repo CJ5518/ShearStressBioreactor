@@ -39,7 +39,7 @@ void setup()
 {
     Serial.begin(9600);
     Wire.begin();
-    //while(!Serial){}
+    while(!Serial){}
 
     p_1.init();
     p_1.togglePump(false);
