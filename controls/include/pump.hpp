@@ -11,7 +11,7 @@ class Pump
         bool is_pump_on();
 
     private:
-        unsigned int pump_pin = 13; // pin for pump
+        unsigned int pump_pin = 23; // pin for pump
         bool pump_on = false; // store state of the pump
 
 };

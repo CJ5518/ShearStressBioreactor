@@ -7,8 +7,10 @@ void flowManager::init()
     // high flow sensor is connected to slave device 1
     tca.init(0,1);
 
-    low_Motor.init(9, 8, 10);
-    high_Motor.init(6, 5, 7);
+    // Low motor is driver 1 with smaller text: PUL (step): 12 DIR: 13 ENA: 14
+    low_Motor.init(13, 12, 14); // dir, pul, ena
+    // High motor is driver 2 with larger text: PUL (step): 26 DIR: 27 ENA: 25
+    high_Motor.init(27, 26, 25);
     tca.tcaselect(0);
     low_FS.init_sensor();
     tca.tcaselect(1);
