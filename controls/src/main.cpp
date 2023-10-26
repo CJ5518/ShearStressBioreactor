@@ -5,7 +5,7 @@ const int dual_sensor_sys = 0;
 const bool isWater = true;
 
 bool low_fs_active = false;
-bool debug = false; // debug mode
+bool debug = true; // debug mode
 
 
 Pump p_1;
@@ -37,7 +37,7 @@ float flow;
 int temp;
 void setup() 
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
     Wire.begin();
     while(!Serial){}
 
