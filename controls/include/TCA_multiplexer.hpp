@@ -2,8 +2,7 @@
 
 #include <stdint.h>
 
-class I2C_Expander
-{
+class I2C_Expander {
     public:
         void tcaselect(uint8_t i);
         void init(unsigned int lowSensor, unsigned int highSensor);

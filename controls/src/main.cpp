@@ -5,20 +5,18 @@ const int dual_sensor_sys = 0;
 const bool isWater = true;
 
 bool low_fs_active = false;
-bool debug = true; // debug mode
-
+bool debug = false; // debug mode
 
 Pump p_1;
 
 flowManager fm;
 
-int loopCount = 1;
+int loopCount = 0;
 
+// Variables for testing flow rates
 float lowFlowRateList[] = {2.00, 5.00, 10.00, 15.00, 20.00};
-//float lowFlowRateList[] = {15.00, 20.00};
 const int lowFlowLen = *(&lowFlowRateList + 1) - lowFlowRateList; // length of test array
 int lowFlowTimeResults[lowFlowLen];
-
 float highFlowRateList[] = {200.0, 250.0, 300.0, 350.0, 400.0};
 const int highFlowLen = *(&highFlowRateList + 1) - highFlowRateList;
 int highFlowTimeResults[highFlowLen];
@@ -35,15 +33,16 @@ int end_time;
 
 float flow;
 int temp;
-void setup() 
-{
+
+/*
+ * Start serial connection and initialize the pump and flow manager.
+ */
+void setup() {
     Serial.begin(115200);
     Wire.begin();
-    while(!Serial){}
+    while(!Serial){} // wait until connection is ready
 
-    p_1.init();
-    p_1.togglePump(false);
-
+    p_1.init(); // initialize the pump
     fm.init(); // initialize flow manager
 
     delay(50);
@@ -60,32 +59,20 @@ int c;
 bool greenLightFlag = false;
 bool readyState = false;
 
-void loop() 
-{
-    if(debug)
-    {
-        //int i;
+/*
+ * If the debug flag is set, test the preprogrammed flow rate lists. Otherwise, wait for commands from serial input.
+ */
+void loop() {
+    if(debug) {
         delay(2000); // wait for pump to push enough flow through the system
-
-        // * prime the pump
-
-        if(loopCount == 0)
-        {
-            /*
-            fm.test_flow(5.00, true);
-            Serial.print("Total ticks: ");
-            Serial.print(fm.stepsTaken);
-            Serial.println();
-            */
-            
+        if(loopCount == 0) {            
             Serial.println("Testing low flow rate list");
 
-            // run flow tests with list of flow rates
-            for(int i = 0; i < lowFlowLen; i++)
-            {
+            // Run flow tests with list of low flow rates
+            for(int i = 0; i < lowFlowLen; i++) {
                 start_time = millis();
                 fm.test_flow(lowFlowRateList[i], true);
-                end_time = millis();
+                end_time = millis(); // measure the time the test_flow() takes
 
                 lowFlowRateTimeList[i] = (end_time - start_time) / 1000;
 
@@ -93,19 +80,16 @@ void loop()
                 delay(2000);
 
                 Serial.println("Closing flow: ");
-                if(lowFlowRateList[i] > 30.0)
-                {
+                if(lowFlowRateList[i] > 30.0) {
                     fm.close_flow(false);
                 }
-                else
-                {
+                else {
                     fm.close_flow(true);
                 }
             }
 
             Serial.println("Finished flow test!\nPrinting results...");
-            for(int i = 0; i < lowFlowLen; i++)
-            {
+            for(int i = 0; i < lowFlowLen; i++) {
                 Serial.print("Flow rate tgt: ");
                 Serial.print(lowFlowRateList[i]);
                 Serial.print(" time: ");
@@ -119,13 +103,11 @@ void loop()
             loopCount++;
         }
 
-        if(loopCount == 1)
-        {
+        if(loopCount == 1) {
             Serial.println("Testing high flow rate list");
 
-            // run flow tests with list of flow rates
-            for(int i = 0; i < highFlowLen; i++)
-            {
+            // Run flow tests with list of high flow rates
+            for(int i = 0; i < highFlowLen; i++) {
                 start_time = millis();
                 fm.test_flow(highFlowRateList[i], true);
                 end_time = millis();
@@ -135,20 +117,18 @@ void loop()
                 highTickList[i] = fm.stepsTaken;
                 delay(2000);
 
+                // Close the valve, though this is not great since the pump is still on
                 Serial.println("Closing flow: ");
-                if(highFlowRateList[i] > 30.0)
-                {
+                if(highFlowRateList[i] > 30.0) {
                     fm.close_flow(false);
                 }
-                else
-                {
+                else {
                     fm.close_flow(true);
                 }
             }
 
             Serial.println("Finished flow test!\nPrinting results...");
-            for(int i = 0; i < highFlowLen; i++)
-            {
+            for(int i = 0; i < highFlowLen; i++) {
                 Serial.print("Flow rate tgt: ");
                 Serial.print(highFlowRateList[i]);
                 Serial.print(" time: ");
@@ -162,65 +142,61 @@ void loop()
             loopCount++;
         }
     }
-    else
-    {
-        // connect to master device
-        while(!greenLightFlag)
-        {
-            if(Serial.available() > 0)
-            {
+    // Normal operation
+    else {
+        // Connect to master device
+        while(!greenLightFlag) {
+            if(Serial.available() > 0) {
                 rx_byte = Serial.read();
 
-                if(rx_byte == '1')
-                {
+                if(rx_byte == '1') {
                     greenLightFlag = true;
                 }
             }
         }
 
-        // wait for system to be primed
-        while(!readyState)
-        {
-            if(Serial.available() > 0)
-            {
+        // Wait for system to be primed
+        while(!readyState) {
+            if(Serial.available() > 0) {
                 rx_byte = Serial.read();
 
-                switch(rx_byte)
-                {
+                switch(rx_byte) {
                     case '7':
-                        // system is primed
+                        // System is primed
                         readyState = true;
                         break;
                     case '1':
-                        // turn on the pump
+                        // Turn on the pump
                         p_1.togglePump(true);
                         break;
                     case '0':
-                        // turn off the pump
+                        // Turn off the pump
                         p_1.togglePump(false);
                         break;
                     default:
                         break;
                 }
             }
-        }        
+        }
         Serial.write("1");
-        while(greenLightFlag && readyState)
-        {
-            // run flow manager 
+
+        // Connected and pump is primed
+        while(greenLightFlag && readyState) {
             ByteCount = -1;
             ByteCount = Serial.readBytesUntil('\n', Buffer, sizeof(Buffer) - 1);
 
+            // If anything was read
             if (ByteCount > 0) {
-                // parse the buffer
+                // Parse the buffer
                 if(strstr(Buffer, ",")) { // if there is a comma in the buffer
                     strcpy(Command, strtok(Buffer, ",")); // copy first part as command
                     strcpy(Data, strtok(NULL, "\n")); // copy second part as data
                 }
-                else 
-                { // only command sent through buffer
+                else { // only command sent through buffer
                     strcpy(Command, strtok(Buffer, "\n"));
                 }
+
+                // Get the integer the command represents
                 if(!isspace(Command[0])) {
                     c = atoi(Command);
                     checkInput = true;
@@ -229,23 +205,20 @@ void loop()
                     checkInput = false;
                 }
             }
-            if(checkInput) 
-            {
+
+            // If an integer command was provided
+            if(checkInput) {
                 switch (c) {
                     case 9:
-                        // kill the operation
-
-                        // close the flow
-                        if(fm.flowAvg > 30.0)
-                        {
+                        // Close the valve in use
+                        if(fm.flowAvg > 30.0) {
                             fm.close_flow(false);
                         }
-                        else
-                        {
+                        else {
                             fm.close_flow(true);
                         }
                         
-                        // turn off the pump
+                        // Turn off the pump
                         p_1.togglePump(false);
 
                         Serial.println("9");
@@ -253,19 +226,18 @@ void loop()
                     case 2:
                         temp = atoi(Data);
 
-                        if(temp == 1)
-                        {
+                        // Turn on the pump if 1 is provided as the data
+                        if(temp == 1) {
                             p_1.togglePump(true);
                         }
-                        else
-                        {
+                        else {
                             p_1.togglePump(false);
                         }
 
                         Serial.println("2");
                         break;
                     case 1:
-                        // new flow rate
+                        // Test the provided flow rate
                         flow = atoi(Data);
                         fm.test_flow(flow, true);
                         Serial.write("1");
@@ -275,60 +247,10 @@ void loop()
                 }
                 checkInput = false;
             }
+
             memset(Buffer, '\0', sizeof(Buffer));
             memset(Command, '\0', sizeof(Command));
             memset(Data, '\0', sizeof(Data));
         }
     }
-    /*
-    if(low_fs_active)
-    {
-        low_FS.set_liquid_type(isWater);
-        delay(50);
-
-        low_FS.readSensor();
-        low_FS.scaleReadings();
-        
-        Serial.print("Flow rate value: ");
-        Serial.print(low_FS.scaled_flow_value);
-        Serial.print(" ml/min");
-        Serial.println();
-    
-        Serial.print("Flags: ");
-        Serial.print(low_FS.aux_value, BIN);
-        Serial.println();
-        
-        Serial.print("Temperature value: ");
-        Serial.print(low_FS.scaled_temp_value);
-        Serial.print(" C");
-        Serial.println();
-        low_Motor.driveMotor();
-    }
-    else
-    {
-        high_FS.set_liquid_type(isWater);
-        delay(50);
-
-        high_FS.readSensor();
-        high_FS.scaleReadings();
-        
-        Serial.print("Flow rate value: ");
-        Serial.print(high_FS.scaled_flow_value);
-        Serial.print(" ml/min");
-        Serial.println();
-        
-        Serial.print("Flags: ");
-        Serial.print(high_FS.aux_value, BIN);
-        Serial.println();
-        
-        Serial.print("Temperature value: ");
-        Serial.print(high_FS.scaled_temp_value);
-        Serial.print(" C");
-        Serial.println();
-        high_Motor.driveMotor();
-    }
-    
-    
-    delay(50); // wait 50 milliseconds
-    */
 }

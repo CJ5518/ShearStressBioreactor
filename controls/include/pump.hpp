@@ -1,17 +1,11 @@
 #pragma once
 
-class Pump
-{
+class Pump {
     public:
-        // init the pump
         void init();
-        // turn pump on/off
         bool togglePump(bool option);
-        // check the state of the pump
         bool is_pump_on();
-
     private:
-        unsigned int pump_pin = 23; // pin for pump
-        bool pump_on = false; // store state of the pump
-
+        unsigned int pump_pin = 23; // pin connected to the pump relay input
+        bool pump_on; // state of the pump
 };

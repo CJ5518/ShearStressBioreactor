@@ -1,8 +1,8 @@
 #pragma once
 
-class StepperMotor
-{
+class StepperMotor {
     public:
+        // Possible stepper states
         enum class State {Off, Clockwise, CounterClockWise};
         
         void init(unsigned int dir, unsigned int step, unsigned int ena);

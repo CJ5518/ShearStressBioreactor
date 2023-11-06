@@ -1,7 +1,6 @@
 #pragma once
 
-class i2c
-{
-public:
-    void init();
+class i2c {
+    public:
+        void init();
 };

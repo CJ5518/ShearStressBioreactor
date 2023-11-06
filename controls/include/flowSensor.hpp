@@ -3,11 +3,10 @@
 #include <Arduino.h>
 #include <stdint.h>
 
-class FlowSensor
-{
+class FlowSensor {
     public:
-        enum class Command : int 
-        {
+        // Commands allowed to be read from serial connection
+        enum class Command : int {
             sensor_address               = (0x08),
             call_reset                   = (0x0006),
             start_WATER_cont_measurement = (0x3608),
@@ -18,7 +17,7 @@ class FlowSensor
         const int SENSOR_POWERUP = 25; // ms
         const int SENSOR_WARMUP  = 50; // ms
         
-        const float SCALE_FACTOR_TEMP = 200.0; // celcius
+        const float SCALE_FACTOR_TEMP = 200.0; // celsius
         
         const char *UNIT_FLOW   = " ml/min";
         const char *UNIT_TEMP_C = " deg C";
