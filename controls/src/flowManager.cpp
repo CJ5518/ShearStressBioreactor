@@ -3,7 +3,7 @@
 /*
  * Initialize the I2C expander, the stepper drivers and the sensors.
  */
-void flowManager::init() {
+void FlowManager::init() {
     // Low flow sensor is connected to slave device 0
     // High flow sensor is connected to slave device 1
     tca.init(0, 1);
@@ -22,7 +22,7 @@ void flowManager::init() {
 /*
  * Opens the relevant valve until the target flow rate is achieved.
  */
-void flowManager::test_flow(float tgt_flowRate, bool isWater) {
+void FlowManager::test_flow(float tgt_flowRate, bool isWater) {
     bool lowFlowSys, flowInRange = false, openValve;
     float difference = 0.01, avg10Readings, temp;
     int motor_ticks, ticks_toDrive;
@@ -175,7 +175,7 @@ void flowManager::test_flow(float tgt_flowRate, bool isWater) {
 /*
  * Reads from the specified flow sensor the requested number of times, and sets the global flowAvg to the average value.
  */
-void flowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
+void FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
     float avg = 0.0;
 
     // Loop the requested number of times
@@ -208,7 +208,7 @@ void flowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
 /*
  * Closes the open valve until the measured flow is 0.
  */
-void flowManager::close_flow(bool lowFlow) {
+void FlowManager::close_flow(bool lowFlow) {
     // This may be problematic, since the pump stays on
     while(flowAvg > 0.0) {
         takeAvgNumReadings(lowFlow, 10);

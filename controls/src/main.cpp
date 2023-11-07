@@ -8,8 +8,8 @@ bool low_fs_active = false;
 bool debug = false; // debug mode
 
 Pump p_1;
-
-flowManager fm;
+FlowManager fm;
+RoutineManager rm;
 
 int loopCount = 0;
 
@@ -44,6 +44,7 @@ void setup() {
 
     p_1.init(); // initialize the pump
     fm.init(); // initialize flow manager
+    rm.init(&fm, &p_1, false); // TODO eventually only the routine manager needs to control the flow manager and maybe pump too
 
     delay(50);
 }

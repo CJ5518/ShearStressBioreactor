@@ -9,3 +9,5 @@
 #include "TCA_multiplexer.hpp"
 #include "i2c.hpp"
 #include "flowManager.hpp"
+#include "task.hpp"
+#include "routineManager.hpp"

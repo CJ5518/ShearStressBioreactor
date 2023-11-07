@@ -5,7 +5,7 @@
 #include "stepperMotor.hpp"
 #include "TCA_multiplexer.hpp"
 
-class flowManager {
+class FlowManager {
     private:
         const float min_lowFlowRate = 0.0;
         const float max_lowFlowRate = 27.09;
