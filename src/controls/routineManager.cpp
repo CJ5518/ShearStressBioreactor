@@ -23,7 +23,10 @@ Task* RoutineManager::buildTestRoutine() {
     noFlow.next = &lowFlow; // set the lowFlow task to come after noFlow is done
 
     Task first = Task(noFlow, 120); // repeat noFlow (and the attached lowFlow) 120 times
-    first.next = &Task(200.0f, 12000); // after the first cycle is done, stay at 200ml/min for 2 minutes
+
+    //Was getting "error: taking address of temporary" without this
+    Task next = Task(200.0f, 12000);
+    first.next = &next; // after the first cycle is done, stay at 200ml/min for 2 minutes
 
     return &first;
 }

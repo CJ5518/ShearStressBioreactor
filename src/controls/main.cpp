@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "../include/project_includes.hpp"
+#include "project_includes.hpp"
 #include <Wire.h>
 const int dual_sensor_sys = 0;
 const bool isWater = true;
