@@ -1,3 +1,6 @@
+//I just wanted to do gui testing in a different main function
+#ifdef USE_OLD_MAIN
+
 #include <Arduino.h>
 #include "project_includes.hpp"
 #include <Wire.h>
@@ -255,3 +258,5 @@ void loop() {
         }
     }
 }
+
+#endif
