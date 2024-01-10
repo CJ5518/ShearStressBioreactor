@@ -2,35 +2,30 @@
 
 #include <Arduino.h>
 
-enum class TaskType {CYCLE, FLOWRATE}; // possible types of tasks
-
 // Structure for a singly-linked list node that stores task information
 class Task {
     public:
         Task* next; // pointer to the next task
         
         Task(float flow, int duration);
-        Task(Task child, int repetitions);
+        Task(float flow, int duration, int repetitions);
+        Task(float newFlow, int newDuration, int newRepetitions, int newOffDuration);
 
         float setFlow(float flow);
         int setRepetitions(int repetitions);
+        int decRepetitions();
         int setDuration(int duration);
-        TaskType setType(TaskType type);
-        void setChild(Task newChild);
+        int setOffDuration(int newDuration);
 
         float getFlow();
         int getRepetitions();
         int getDuration();
-        TaskType getType();
-        Task* getChild();
+        int Task::getOffDuration();
+        Task* getNext();
 
     private:
-        TaskType type; // cycle or flow rate specifier
-        int duration; // duration to run in ms
-        union {
-            float flow; // for FLOWRATE tasks, in ml/min
-            int repetitions; // for CYCLE tasks
-        } attr;
-
-        Task* child; // only set for cycle tasks, these are the tasks to repeat
+        int duration; // duration to maintain flow in ms
+        int offDuration; // duration to maintain 0 ml/min in ms
+        float flow; // in ml/min
+        int repetitions; // for CYCLE tasks, 1 otherwise
 };

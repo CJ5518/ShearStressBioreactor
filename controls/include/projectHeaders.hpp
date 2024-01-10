@@ -6,7 +6,7 @@
 #include "lowFlowSensor.hpp"
 #include "highFlowSensor.hpp"
 #include "stepperMotor.hpp"
-#include "TCA_multiplexer.hpp"
+#include "tcaMultiplexer.hpp"
 #include "i2c.hpp"
 #include "flowManager.hpp"
 #include "task.hpp"

@@ -10,7 +10,7 @@ void FlowSensor::init_sensor() {
 
     do {
         // Soft reset the sensor
-        ret = soft_rst_sensor();
+        ret = resetSensor();
 
         if(ret != 0) {
             delay(500); // wait long enough for chip reset to complete
@@ -23,10 +23,10 @@ void FlowSensor::init_sensor() {
 /*
  * Sets the liquid type for the sensor and returns the response.
  */
-int FlowSensor::set_liquid_type(bool isWater) {
+int FlowSensor::setLiquid(bool isWater) {
     int ret;
 
-    ret = start_cont_readings(isWater);
+    ret = startReading(isWater);
     if(ret != 0) {
         Serial.println("Error while writing measurement mode command");
     }
@@ -35,9 +35,9 @@ int FlowSensor::set_liquid_type(bool isWater) {
 }
 
 /*
- * Reads the flow rate data from the current sensor, and sets the global signed_flow_value.
+ * Reads the flow rate data from the current sensor, sets the global flow values, and returns the signed flow value.
  */
-void FlowSensor::readSensor() {
+int16_t FlowSensor::readSensor() {
     int ret;
 
     Wire.requestFrom(0x08, 9);
@@ -46,37 +46,39 @@ void FlowSensor::readSensor() {
         Serial.println("Error while reading flow measurement");
     }
 
-    sensor_flow_value = Wire.read() << 8; // read the MSB from the sensor
-    sensor_flow_value |= Wire.read(); // read the LSB from the sensor
+    sensorFlowValue = Wire.read() << 8; // read the MSB from the sensor
+    sensorFlowValue |= Wire.read(); // read the LSB from the sensor
     sensor_flow_crc = Wire.read();
 
-    sensor_temp_value = Wire.read() << 8; // read the MSB from the sensor
-    sensor_temp_value |= Wire.read(); // read the LSB from the sensor
+    sensorTempValue = Wire.read() << 8; // read the MSB from the sensor
+    sensorTempValue |= Wire.read(); // read the LSB from the sensor
     sensor_temp_crc = Wire.read();
 
     aux_value = Wire.read() << 8; // read the MSB from the sensor
     aux_value |= Wire.read(); // read the LSB from the sensor
     aux_crc = Wire.read();
 
-    ret = stop_cont_readings();
+    ret = stopReading();
 
     if(ret != 0) {
         Serial.println("Error during write measurement mode command");
     }
     else {
-        signed_flow_value = (int16_t) sensor_flow_value;
-        signed_temp_value = (int16_t) sensor_temp_value;
-        scaled_temp_value = ((float) signed_temp_value) / SCALE_FACTOR_TEMP;
+        signedFlowValue = (int16_t) sensorFlowValue;
+        signedTempValue = (int16_t) sensorTempValue;
+        scaledTempValue = ((float) signedTempValue) / SCALE_FACTOR_TEMP; // TODO: determine if this is useful
     }
+
+    return signedFlowValue;
 }
 
 /*
  * Resets the flow rate sensor.
  */
-int FlowSensor::soft_rst_sensor() {
-    int ret; 
+int FlowSensor::resetSensor() {
+    int ret = 1; 
     
-    do {
+    while (ret != 0) {
         Wire.beginTransmission(0x00);
         Wire.write(0x06);
         ret = Wire.endTransmission();
@@ -85,7 +87,7 @@ int FlowSensor::soft_rst_sensor() {
             Serial.println("Error while sending soft reset command, retrying...");
             delay(500); // wait long enough for chip reset to complete
         }
-    } while(ret != 0);
+    }
     
     return ret;
 }
@@ -93,11 +95,11 @@ int FlowSensor::soft_rst_sensor() {
 /*
  * Starts sensing and returns the response.
  */
-int FlowSensor::start_cont_readings(bool isWater) {
-    int ret;
-    
+int FlowSensor::startReading(bool isWater) {    
     Wire.beginTransmission(0x08);
-    if(isWater) {
+    
+    // Tell the sensor whether this is water
+    if (isWater) {
         Wire.write(0x36);
         Wire.write(0x08);
     }
@@ -106,22 +108,22 @@ int FlowSensor::start_cont_readings(bool isWater) {
         Wire.write(0x16);
     }
     
-    ret = Wire.endTransmission();
+    int ret = Wire.endTransmission();
     delay(50);
+
     return ret;
 }
 
 /*
  * Stops the sensor and returns the response.
  */
-int FlowSensor::stop_cont_readings() {
-    int ret;
-
+int FlowSensor::stopReading() {
     Wire.beginTransmission(0x08);
     Wire.write(0x3F);
     Wire.write(0xF9);
     
-    ret = Wire.endTransmission();
+    int ret = Wire.endTransmission();
     delay(50);
+
     return ret;
 }

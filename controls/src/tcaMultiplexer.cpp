@@ -1,12 +1,12 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#include "TCA_multiplexer.hpp"
+#include "tcaMultiplexer.hpp"
 
 /*
  * Select the device at the provided index.
  */
-void I2C_Expander::tcaselect(uint8_t i) {
+void I2C_Expander::tcaSelect(uint8_t i) {
     if(i > 7) {
         return;
     }
@@ -25,10 +25,10 @@ void I2C_Expander::init(unsigned int lowSensor, unsigned int highSensor) {
 
     for(int i = 0; i < 8; i++) {
         if(i == lowSensor || i == highSensor) {
-            active_sensors[i] = 1;
+            activeSensors[i] = 1;
         }
         else {
-            active_sensors[i] = 0;
+            activeSensors[i] = 0;
         }
     }
 }
@@ -38,10 +38,10 @@ void I2C_Expander::init(unsigned int lowSensor, unsigned int highSensor) {
  */
 void I2C_Expander::readSensor(bool lowSensor) {
     if(lowSensor) {
-        tcaselect(lowSensorAddr);
+        tcaSelect(lowSensorAddr);
     }
     else {
-        tcaselect(highSensorAddr);
+        tcaSelect(highSensorAddr);
     }
 }
 

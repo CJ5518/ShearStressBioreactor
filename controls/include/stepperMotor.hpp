@@ -7,8 +7,8 @@ class StepperMotor {
         
         void init(unsigned int dir, unsigned int step, unsigned int ena);
         
-        State get_state();
-        void set_state(State s);
+        State getState();
+        void setState(State s);
         void step();
         void driveMotor(int numTicks, bool openValve);
         int getNumRotations();

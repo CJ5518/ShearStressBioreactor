@@ -24,23 +24,23 @@ class FlowSensor {
         const char *UNIT_TEMP_F = " deg F";
         
         uint16_t aux_value; // flags 
-        uint16_t sensor_flow_value;
-        uint16_t sensor_temp_value;
+        uint16_t sensorFlowValue;
+        uint16_t sensorTempValue;
         
-        int16_t signed_flow_value;
-        int16_t signed_temp_value;
+        int16_t signedFlowValue;
+        int16_t signedTempValue;
 
         float scaled_flow_value;
-        float scaled_temp_value;
+        float scaledTempValue;
 
         byte aux_crc;
         byte sensor_flow_crc;
         byte sensor_temp_crc;
 
         void init_sensor();
-        void readSensor();
-        int set_liquid_type(bool isWater);
-        int soft_rst_sensor();
-        int start_cont_readings(bool isWater);
-        int stop_cont_readings();
+        int16_t readSensor();
+        int setLiquid(bool isWater);
+        int resetSensor();
+        int startReading(bool isWater);
+        int stopReading();
 };

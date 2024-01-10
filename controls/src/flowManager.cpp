@@ -8,154 +8,102 @@ void FlowManager::init() {
     // High flow sensor is connected to slave device 1
     tca.init(0, 1);
 
+    pid.begin();
+    pid.tune(0.1, 0.5, 0.3); // kP, kI, kD
+    pid.limit(min_speed, max_speed);
+
     // Low motor is driver 1 with smaller text: PUL (step): 12 DIR: 13 ENA: 14
     low_Motor.init(13, 12, 14); // dir, pul, ena
     // High motor is driver 2 with larger text: PUL (step): 26 DIR: 27 ENA: 25
     high_Motor.init(27, 26, 25);
 
-    tca.tcaselect(0);
-    low_FS.init_sensor();
-    tca.tcaselect(1);
-    high_FS.init_sensor();
+    tca.tcaSelect(0);
+    lowFS.init_sensor();
+    tca.tcaSelect(1);
+    highFS.init_sensor();
 }
 
 /*
  * Opens the relevant valve until the target flow rate is achieved.
  */
-void FlowManager::test_flow(float tgt_flowRate, bool isWater) {
-    bool lowFlowSys, flowInRange = false, openValve;
-    float difference = 0.01, avg10Readings, temp;
-    int motor_ticks, ticks_toDrive;
+void FlowManager::setFlow(float targetFlow, bool isWater) {
+    bool lowFlowSys; // whether the low valve should be used
+    bool flowInRange = false; // will be obsolete once the loop is moved
+    bool openValve; // whether the valve should be opened or closed
+    float difference; // error bounds on target flow
+    float avg10Readings; // current flow rate
+    int motor_ticks;
 
-    // system checks before running motors
+    // Print target
     Serial.print("Target flow rate: ");
-    Serial.print(tgt_flowRate);
+    Serial.print(targetFlow);
     Serial.println();
 
-    if(tgt_flowRate == 0) {
+    // Use the high flow valve and sensor for all flow rates over 30 ml/min
+    if (targetFlow > 30.0) {
+        lowFlowSys = false;
+
+        // Accuracy is higher for flow rates below 300 ml/min
+        if(targetFlow <= 300) {
+            difference = targetFlow * 0.05;
+        }
+        else {
+            difference = targetFlow * 0.1;
+        }
+    }
+    else {
+        lowFlowSys = true;
+        // Error rate for low flow sensor is 5%
+        difference = targetFlow * 0.05;
+    }
+
+    // Close the old valve when switching between the two systems (low->high or high->low)
+    if (targetFlow == 0 || lastSys != lowFlowSys) {
+        closeFlow(lastSys);
+        Serial.println("Setting flow rate to 0.");
         stepsTaken = 0;
     }
 
-    // if the flow rate is larger than 30.0
-    // then we use the high flow system
-    if(tgt_flowRate > 30.0) {
-        lowFlowSys = false;
-        // error rate for high flow sensor is 10%
-        if(tgt_flowRate > 300) {
-            difference = tgt_flowRate * 0.05;
-        }
-        else {
-            difference = tgt_flowRate * 0.1;
-        }
-    }
-    // else use the low flow system
-    else {
-        lowFlowSys = true;
-        // error rate for low flow sensor is 5%
-        difference = tgt_flowRate * 0.05;
-    } 
+    // Save the valve that was adjusted last
+    lastSys = lowFlowSys;
 
-    // begin test run
-    while(!flowInRange) {
+    // Repeat until the current flow rate is close to the target
+    // TODO: remove the loop, call this function multiple times from main loop with interrupts
+    while (!flowInRange) {
         avg10Readings = 0;
         
         // average 10 flow readings then assign to current flow rate
-        takeAvgNumReadings(lowFlowSys, 10);
-
-        avg10Readings = flowAvg;
+        avg10Readings = takeAvgNumReadings(lowFlowSys, 10);
         
         Serial.print("Flow Rate: ");
         Serial.print(avg10Readings);
         Serial.print(" ml/min");
         Serial.println();
 
-        // check if current flow rate is in range of target flow rate        
-        if((avg10Readings > 0 && ((tgt_flowRate - avg10Readings) < difference && (avg10Readings - tgt_flowRate) < difference)) || tgt_flowRate == avg10Readings) {
+        // Check if current flow rate is in range of target flow rate        
+        if (avg10Readings > 0 && abs(targetFlow - avg10Readings) < difference) {
             flowInRange = true;
             Serial.println("Flow rate in range!");
         }
         else {
-            temp = tgt_flowRate - avg10Readings;
-            temp = (temp * temp) / 2;
-        
-            // Adjust the motor based on range from target flow rate
-            if(lowFlowSys) {
-                // Adjust low flow rate valve
-                if(temp > 20) {
-                    ticks_toDrive = 10000;
-                }
-                else if(temp > 10) {
-                    ticks_toDrive = 8000;
-                }
-                else if(temp > 2) {
-                    ticks_toDrive = 5000;
-                }
-                else if(temp > 1.5) {
-                    ticks_toDrive = 4000;
-                }
-                else if(temp > 1) {
-                    ticks_toDrive = 3000;
-                }
-                else if(temp > 0.5) {
-                    ticks_toDrive = 2000;
-                }
-                else if(temp > 0.20) {
-                    ticks_toDrive = 1000;
-                }
-                else if(temp > 0.10) {
-                    ticks_toDrive = 500;
-                }
-                else if(temp > 0.05) {
-                    ticks_toDrive = 100;
-                }
-                else {
-                    ticks_toDrive = 50;
-                }
-            }
-            else {
-                // Adjust high flow rate valve
-                if(temp > 200) {
-                    ticks_toDrive = 1000;
-                }
-                else if(temp > 100) {
-                    ticks_toDrive = 500;
-                }
-                else if(temp > 10) {
-                    ticks_toDrive = 200;
-                }
-                else if(temp > 5) {
-                    ticks_toDrive = 100;
-                }
-                else if(temp > 2) {
-                    ticks_toDrive = 50;
-                }
-                else if(temp > 1) {
-                    ticks_toDrive = 20;
-                }
-                else if(temp > 0.5) {
-                    ticks_toDrive = 5;
-                }
-                else {
-                    ticks_toDrive = 1;
-                }
-            }
+            // Set the target flow rate and provide current flow
+            pid.setpoint(targetFlow);
+            ticks_toDrive = pid.compute(avg10Readings); // controller will return the ticks to drive the stepper
 
             // If the current flow rate is greater than the target flow rate
-            if (avg10Readings > tgt_flowRate) {
+            if (avg10Readings > targetFlow) {
                 // Close the valve
                 openValve = false;
-
                 motor_ticks -= ticks_toDrive;
             }
             else {
                 // Open the valve
                 openValve = true;
-
                 motor_ticks += ticks_toDrive;
             }
             
             // Step the relevant motor the number of ticks that was just determined
-            if(lowFlowSys) {
+            if (lowFlowSys) {
                 low_Motor.driveMotor(ticks_toDrive, openValve);
             }
             else {
@@ -163,9 +111,11 @@ void FlowManager::test_flow(float tgt_flowRate, bool isWater) {
             }
 
             // Wait for flow rate to adjust
-            delay(500);
+            delay(500); // TODO: update delay for new pump and replace with schedule call in main loop
         }
     }
+
+    // Print the total number of ticks to reach the target
     stepsTaken = motor_ticks;
     Serial.print("Motor ticks: ");
     Serial.print(motor_ticks);
@@ -175,82 +125,60 @@ void FlowManager::test_flow(float tgt_flowRate, bool isWater) {
 /*
  * Reads from the specified flow sensor the requested number of times, and sets the global flowAvg to the average value.
  */
-void FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
+float FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
     float avg = 0.0;
+    float reading;
 
     // Loop the requested number of times
     for (int i = 0; i < numReadings; i++) {
         if (lowFlow) {
-            tca.tcaselect(1);
-            low_FS.set_liquid_type(true);
-            delay(50);
+            tca.tcaSelect(1);
+            lowFS.setLiquid(true);
+            delay(50); // TODO: determine how important it is to wait
             
-            low_FS.readSensor();
-            low_FS.scaleReadings();
-
-            avg += low_FS.scaled_flow_value;
+            reading = lowFS.scaleReadings(lowFS.readSensor());
         }
         else {
-            tca.tcaselect(0);
-            high_FS.set_liquid_type(true);
+            tca.tcaSelect(0);
+            highFS.setLiquid(true);
             delay(50);
 
-            high_FS.readSensor();
-            high_FS.scaleReadings();
-
-            avg += high_FS.scaled_flow_value;
+            reading = highFS.scaleReadings(highFS.readSensor());
         }
+
+        avg += reading;
+
+        Serial.print("Read flow rate: ");
+        Serial.println(reading);
     }
 
-    flowAvg = avg / numReadings;
+    return avg / numReadings;
 }
 
 /*
  * Closes the open valve until the measured flow is 0.
  */
-void FlowManager::close_flow(bool lowFlow) {
-    // This may be problematic, since the pump stays on
-    while(flowAvg > 0.0) {
-        takeAvgNumReadings(lowFlow, 10);
-        Serial.println(flowAvg);
+void FlowManager::closeFlow(bool lowFlow) {
+    float flowAvg = takeAvgNumReadings(lowFlow, 10);
 
-        if(flowAvg > 5.0) {
-            // Drive the relevant motor to close the valve
-            if(lowFlow) {
-                low_Motor.driveMotor(6400, false);
-            }
-            else {
-                high_Motor.driveMotor(6400, false);
-            }
+    // There must be a bypass line in order to close the valve while the pump is on!
+    while(flowAvg > 0.0) {
+        Serial.println(flowAvg);
+        // Use the controller to determine how to close the valves
+        pid.setpoint(0);
+        int diffSteps = pid.compute(flowAvg);
+
+        if(lowFlow) {
+            low_Motor.driveMotor(diffSteps, false);
         }
         else {
-            int tempSteps;
-
-            if(flowAvg > 2.0) {
-                tempSteps = 2000;
-            }
-            else if(flowAvg > 1.0) {
-                tempSteps = 1000;
-            }
-            else if(flowAvg > 0.5) {
-                tempSteps = 500;
-            }
-            else if(flowAvg > 0.2) {
-                tempSteps = 500;
-            }
-            else {
-                tempSteps = 200;
-            }
-
-            if(lowFlow) {
-                low_Motor.driveMotor(tempSteps, false);
-            }
-            else {
-                high_Motor.driveMotor(tempSteps, false);
-            } 
-            stepsTaken -= tempSteps;
+            high_Motor.driveMotor(diffSteps, false);
         }
+
+        delay(200); // TODO: test for new pump and replace with scheduled call
+        flowAvg = takeAvgNumReadings(lowFlow, 10);
     }
 
-    stepsTaken = 0;
+    Serial.print(lowFlow ? "Low" : "High");
+    Serial.println(" flow rate valve closed.");
 }
