@@ -4,8 +4,9 @@
  * Initialize the I2C expander, the stepper drivers and the sensors.
  */
 void FlowManager::init() {
-    // Low flow sensor is connected to slave device 0
-    // High flow sensor is connected to slave device 1
+    // Low flow sensor is connected as device 0
+    // High flow sensor is connected as device 1
+    // Pump controller is connected as device 2
     tca.init(0, 1);
 
     pid.begin();

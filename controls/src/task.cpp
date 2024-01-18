@@ -80,6 +80,33 @@ int Task::setOffDuration(int newDuration) {
 }
 
 /*
+ * Sets the provided task as the next task following this one, and returns the old value of the next pointer.
+ */
+Task* Task::setNext(Task* newTask) {
+    Task* oldTask = next;
+    next = newTask;
+    
+    return oldTask;
+}
+
+/*
+ * Appends the provided task to the end of the linked list, and returns the number of tasks following this one in the new list.
+ */
+int Task::append(Task* newTask) {
+    int i = 1; // account for the new task
+    Task* head = this;
+
+    // Loop until there is no next task
+    while (head->next != NULL) {
+        i++;
+        head = head->next;
+    }
+
+    head->next = newTask;
+    return i;
+}
+
+/*
  * Returns the target flow rate of this task.
  */
 float Task::getFlow() {

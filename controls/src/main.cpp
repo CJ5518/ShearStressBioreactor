@@ -13,7 +13,7 @@ RoutineManager rm;
  * Start serial connection and initialize the pump and flow manager.
  */
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(9600);
     Wire.begin();
     while (!Serial) {} // wait until connection is ready
 
@@ -31,5 +31,6 @@ void setup() {
  * TODO: deal with scheduling
  */
 void loop() {
-
+    
+    delay(100);
 }
