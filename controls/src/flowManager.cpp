@@ -11,12 +11,12 @@ void FlowManager::init() {
 
     pid.begin();
     pid.tune(0.1, 0.5, 0.3); // kP, kI, kD
-    pid.limit(min_speed, max_speed);
+    pid.limit(MIN_SPEED, MAX_SPEED);
 
     // Low motor is driver 1 with smaller text: PUL (step): 12 DIR: 13 ENA: 14
-    low_Motor.init(13, 12, 14); // dir, pul, ena
+    lowMotor.init(13, 12, 14); // dir, pul, ena
     // High motor is driver 2 with larger text: PUL (step): 26 DIR: 27 ENA: 25
-    high_Motor.init(27, 26, 25);
+    highMotor.init(27, 26, 25);
 
     tca.tcaSelect(0);
     lowFS.init_sensor();
@@ -33,7 +33,7 @@ void FlowManager::setFlow(float targetFlow, bool isWater) {
     bool openValve; // whether the valve should be opened or closed
     float difference; // error bounds on target flow
     float avg10Readings; // current flow rate
-    int motor_ticks;
+    int motorTicks;
 
     // Print target
     Serial.print("Target flow rate: ");
@@ -89,26 +89,26 @@ void FlowManager::setFlow(float targetFlow, bool isWater) {
         else {
             // Set the target flow rate and provide current flow
             pid.setpoint(targetFlow);
-            ticks_toDrive = pid.compute(avg10Readings); // controller will return the ticks to drive the stepper
+            ticksToDrive = pid.compute(avg10Readings); // controller will return the ticks to drive the stepper
 
             // If the current flow rate is greater than the target flow rate
             if (avg10Readings > targetFlow) {
                 // Close the valve
                 openValve = false;
-                motor_ticks -= ticks_toDrive;
+                motorTicks -= ticksToDrive;
             }
             else {
                 // Open the valve
                 openValve = true;
-                motor_ticks += ticks_toDrive;
+                motorTicks += ticksToDrive;
             }
             
             // Step the relevant motor the number of ticks that was just determined
             if (lowFlowSys) {
-                low_Motor.driveMotor(ticks_toDrive, openValve);
+                lowMotor.driveMotor(ticksToDrive, openValve);
             }
             else {
-                high_Motor.driveMotor(ticks_toDrive, openValve);
+                highMotor.driveMotor(ticksToDrive, openValve);
             }
 
             // Wait for flow rate to adjust
@@ -117,9 +117,9 @@ void FlowManager::setFlow(float targetFlow, bool isWater) {
     }
 
     // Print the total number of ticks to reach the target
-    stepsTaken = motor_ticks;
+    stepsTaken = motorTicks;
     Serial.print("Motor ticks: ");
-    Serial.print(motor_ticks);
+    Serial.print(motorTicks);
     Serial.println();
 }
 
@@ -170,10 +170,10 @@ void FlowManager::closeFlow(bool lowFlow) {
         int diffSteps = pid.compute(flowAvg);
 
         if(lowFlow) {
-            low_Motor.driveMotor(diffSteps, false);
+            lowMotor.driveMotor(diffSteps, false);
         }
         else {
-            high_Motor.driveMotor(diffSteps, false);
+            highMotor.driveMotor(diffSteps, false);
         }
 
         delay(200); // TODO: test for new pump and replace with scheduled call

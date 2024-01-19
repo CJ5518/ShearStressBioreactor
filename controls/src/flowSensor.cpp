@@ -48,15 +48,15 @@ int16_t FlowSensor::readSensor() {
 
     sensorFlowValue = Wire.read() << 8; // read the MSB from the sensor
     sensorFlowValue |= Wire.read(); // read the LSB from the sensor
-    sensor_flow_crc = Wire.read();
+    sensorFlowCRC = Wire.read();
 
     sensorTempValue = Wire.read() << 8; // read the MSB from the sensor
     sensorTempValue |= Wire.read(); // read the LSB from the sensor
-    sensor_temp_crc = Wire.read();
+    sensorTempCRC = Wire.read();
 
-    aux_value = Wire.read() << 8; // read the MSB from the sensor
-    aux_value |= Wire.read(); // read the LSB from the sensor
-    aux_crc = Wire.read();
+    auxValue = Wire.read() << 8; // read the MSB from the sensor
+    auxValue |= Wire.read(); // read the LSB from the sensor
+    auxCRC = Wire.read();
 
     ret = stopReading();
 

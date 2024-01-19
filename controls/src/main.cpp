@@ -2,7 +2,7 @@
 #include "../include/projectHeaders.hpp"
 #include <Wire.h>
 
-const bool isWater = true;
+const bool IS_WATER = true; // whether the flow sensors should measure with water calibration or Isopropyl
 bool debug = false; // debug mode
 
 Pump p;

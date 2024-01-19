@@ -6,7 +6,7 @@
  * Sets the ENA input of the stepper driver based on the given state.
  */
 void StepperMotor::setState(StepperMotor::State s) {
-    curr_state = s;
+    state = s;
 
     if (s == State::Off) {
         digitalWrite(enaPin, HIGH);
@@ -20,13 +20,13 @@ void StepperMotor::setState(StepperMotor::State s) {
  * Returns the current state of the stepper motor.
  */
 StepperMotor::State StepperMotor::getState() {
-    return curr_state;
+    return state;
 }
 
 /*
  * Initialize the pins for controlling the stepper. 
  */
-void StepperMotor::init(unsigned int dir, unsigned int step, unsigned int ena) {
+void StepperMotor::init(int dir, int step, int ena) {
     dirPin = dir;
     stepPin = step;
     enaPin = ena;
@@ -42,7 +42,7 @@ void StepperMotor::init(unsigned int dir, unsigned int step, unsigned int ena) {
  * Returns the number of rotations that have been performed.
  */
 int StepperMotor::getNumRotations() {
-    return m_ticks_open / ticks_per_revolution;
+    return completedTicks / TICKS_PER_REVOLUTION;
 }
 
 /*
@@ -54,20 +54,20 @@ void StepperMotor::step() {
     if (temp == State::Clockwise) {
         // Turns motor clockwise to close the valve
         digitalWrite(dirPin, HIGH);
-        m_ticks_open--; // tick clockwise = closing the valve's flow
+        completedTicks--; // tick clockwise = closing the valve's flow
     }
-    else if (temp == State::CounterClockWise) {
+    else if (temp == State::CounterClockwise) {
         // Turn the motor counterclockwise to open the valve
         digitalWrite(dirPin, LOW);
-        m_ticks_open++; // tick counterclockwise = opening the valve's flow
+        completedTicks++; // tick counterclockwise = opening the valve's flow
     }
 
     // If the motor state is not off, move the motor
     if (temp != State::Off) {
         digitalWrite(stepPin, HIGH);
-        delayMicroseconds(motorSpeedFast);
+        delayMicroseconds(MOTOR_SPEED_FAST);
         digitalWrite(stepPin, LOW);
-        delayMicroseconds(motorSpeedFast);
+        delayMicroseconds(MOTOR_SPEED_FAST);
     }
 }
 
@@ -78,7 +78,7 @@ void StepperMotor::driveMotor(int numTicks, bool openValve) {
     int i;
 
     if (!openValve) {
-        setState(State::CounterClockWise);
+        setState(State::CounterClockwise);
     }
     else {
         setState(State::Clockwise);
