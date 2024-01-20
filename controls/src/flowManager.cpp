@@ -1,12 +1,12 @@
 #include "flowManager.hpp"
+#include "Pump.hpp"
 
 /*
  * Initialize the I2C expander, the stepper drivers and the sensors.
  */
-void FlowManager::init() {
+void FlowManager::init(Pump* p) {
     // Low flow sensor is connected as device 0
     // High flow sensor is connected as device 1
-    // Pump controller is connected as device 2
     tca.init(0, 1);
 
     pid.begin();
@@ -22,6 +22,8 @@ void FlowManager::init() {
     lowFS.init_sensor();
     tca.tcaSelect(1);
     highFS.init_sensor();
+
+    pump = p; // save a pointer to the pump controller so the speed can be set
 }
 
 /*
@@ -58,11 +60,20 @@ void FlowManager::setFlow(float targetFlow, bool isWater) {
         difference = targetFlow * 0.05;
     }
 
-    // Close the old valve when switching between the two systems (low->high or high->low)
+    // Close the old valve and change the pump speed when switching between the two systems (low->high or high->low)
     if (targetFlow == 0 || lastSys != lowFlowSys) {
         closeFlow(lastSys);
         Serial.println("Setting flow rate to 0.");
         stepsTaken = 0;
+
+        // TODO: consider setting the flow rate more precisely to avoid turbulence when clamping to flow rates at the lower limit of each system
+        // If we are changing from a high flow rate to a low flow rate, set the pump speed to the max low flow rate
+        if (lowFlowSys) {
+            pump->setSpeed(MAX_LOW_FLOW_RATE);
+        }
+        else {
+            pump->setSpeed(MAX_HIGH_FLOW_RATE); // set the pump speed to the max high flow rate
+        }
     }
 
     // Save the valve that was adjusted last

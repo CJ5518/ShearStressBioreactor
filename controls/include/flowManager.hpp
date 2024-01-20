@@ -23,6 +23,7 @@ class FlowManager {
         // Output variable for the PID controller
         float ticksToDrive;
         PIDController pid;
+        Pump* pump;
 
         bool lastSys; // whether or not the last flow rate requested was for the low flow rate system
 
@@ -33,7 +34,7 @@ class FlowManager {
         StepperMotor lowMotor;
         StepperMotor highMotor;
     public:
-        void init();
+        void init(Pump* p);
         void setFlow(float tgtFlowRate, bool isWater);
         void closeFlow(bool lowFlow);
         float takeAvgNumReadings(bool lowFlow, int numReadings);
