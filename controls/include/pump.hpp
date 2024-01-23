@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ModbusMaster.h>
+
 class Pump {
     public:
         void init(ModbusMaster controller);

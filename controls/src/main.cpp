@@ -16,6 +16,22 @@ RoutineManager rm;
 ModbusMaster controller;
 
 /*
+ * Set RE and DE pins to indicate a message will be sent.
+ */
+void preTransmission() {
+  digitalWrite(MAX485_RE_NEG, 1);
+  digitalWrite(MAX485_DE, 1);
+}
+
+/*
+ * Reset RE and DE pins to indicate the device is ready to receive messages.
+ */
+void postTransmission() {
+  digitalWrite(MAX485_RE_NEG, 0);
+  digitalWrite(MAX485_DE, 0);
+}
+
+/*
  * Start serial connection and initialize the pump and flow manager.
  */
 void setup() {
@@ -49,20 +65,4 @@ void setup() {
 void loop() {
     
     delay(100);
-}
-
-/*
- * Set RE and DE pins to indicate a message will be sent.
- */
-void preTransmission() {
-  digitalWrite(MAX485_RE_NEG, 1);
-  digitalWrite(MAX485_DE, 1);
-}
-
-/*
- * Reset RE and DE pins to indicate the device is ready to receive messages.
- */
-void postTransmission() {
-  digitalWrite(MAX485_RE_NEG, 0);
-  digitalWrite(MAX485_DE, 0);
 }

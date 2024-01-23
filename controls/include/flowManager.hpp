@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pump.hpp"
 #include "lowFlowSensor.hpp"
 #include "highFlowSensor.hpp"
 #include "stepperMotor.hpp"

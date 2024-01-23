@@ -1,5 +1,4 @@
 #include "flowManager.hpp"
-#include "Pump.hpp"
 
 /*
  * Initialize the I2C expander, the stepper drivers and the sensors.

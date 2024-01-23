@@ -9,6 +9,7 @@ class RoutineManager {
         void init(FlowManager* fm, Pump* pump, bool test);
         Task* buildTestRoutine();
         void run(Task* head);
+        void deleteRoutine(Task* head);
 
     private:
         FlowManager* f;
