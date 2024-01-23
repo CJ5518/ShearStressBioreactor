@@ -5,8 +5,10 @@
 
 const bool IS_WATER = true; // whether the flow sensors should measure with water calibration or Isopropyl
 // Receive and transmit pins for the MAX485
-const int MAX485_DE = 3;
-const int MAX485_RE_NEG = 2;
+const int MODBUS_RX = 16;
+const int MODBUS_TX = 17;
+const int MAX485_DE = 18;
+const int MAX485_RE_NEG = 19;
 
 bool debug = false; // debug mode
 
@@ -36,14 +38,14 @@ void postTransmission() {
  */
 void setup() {
     Serial.begin(9600); // for USB debugging
-    Serial2.begin(9600); // for pump control
+    Serial2.begin(9600, SERIAL_8E1, MODBUS_RX, MODBUS_TX); // for pump control
     Wire.begin();
     while (!Serial || !Serial2) {} // wait until connections are ready
 
     controller.begin(0xC0, Serial2); // 0xC0 is the default pump address with all DIP switches off
-    pinMode(MAX485_RE_NEG, OUTPUT);
-    pinMode(MAX485_DE, OUTPUT);
-    postTransmission(); // start in receive mode
+    //pinMode(MAX485_RE_NEG, OUTPUT);
+    //pinMode(MAX485_DE, OUTPUT);
+    //postTransmission(); // start in receive mode
 
     // These functions will be called automatically by the controller to make sure the MAX485 is configured correctly
     controller.preTransmission(preTransmission);
@@ -63,6 +65,8 @@ void setup() {
  * TODO: deal with scheduling
  */
 void loop() {
-    
-    delay(100);
+    delay(1000);
+    p.togglePump(false);
+    delay(1000);
+    p.togglePump(true);
 }

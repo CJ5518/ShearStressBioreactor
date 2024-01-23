@@ -10,7 +10,7 @@ void Pump::init(ModbusMaster controller) {
 
     this->controller = controller;
     // TODO: consider scheduling this 0.5-1 sec later to make sure the pump is on
-    controller.writeSingleCoil(0x1004, true); // send the command to enable RS485 communication
+    //controller.writeSingleCoil(0x1004, true); // send the command to enable RS485 communication
 
     // Set the pump state to on since it has power by default for some reason
     pumpOn = true;

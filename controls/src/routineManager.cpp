@@ -70,7 +70,7 @@ void RoutineManager::run(Task* head) {
 /*
  * Recursively deletes all Tasks in the linked list starting at the provided Task*.
  */
-void deleteRoutine(Task* head) {
+void RoutineManager::deleteRoutine(Task* head) {
     deleteRoutine(head->getNext());
 
     if (head->getNext() == NULL) {
