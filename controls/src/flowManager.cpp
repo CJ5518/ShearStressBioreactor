@@ -8,9 +8,9 @@ void FlowManager::init(Pump* p) {
     // High flow sensor is connected as device 1
     tca.init(0, 1);
 
-    pid.begin();
+    /*pid.begin();
     pid.tune(0.1, 0.5, 0.3); // kP, kI, kD
-    pid.limit(MIN_SPEED, MAX_SPEED);
+    pid.limit(MIN_SPEED, MAX_SPEED);*/
 
     // Low motor is driver 1 with smaller text: PUL (step): 12 DIR: 13 ENA: 14
     lowMotor.init(13, 12, 14); // dir, pul, ena

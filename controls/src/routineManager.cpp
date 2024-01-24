@@ -48,11 +48,11 @@ void RoutineManager::run(Task* head) {
         for (int i = 0; i < head->getRepetitions(); i++) {
             // When a flow rate of 0 is requested, or this is an odd repetition in a cycle, turn off the pump
             if (head->getFlow() == 0 || i % 2 == 1) {
-                p->togglePump(false); // TODO: ensure the new pump can handle being toggled frequently
+                p->setPump(false); // TODO: ensure the new pump can handle being toggled frequently
                 delay(head->getOffDuration()); // TODO
             }
             else {
-                p->togglePump(true); // make sure the pump is on in all other cases
+                p->setPump(true); // make sure the pump is on in all other cases
                 // Try to achieve this flow rate with this flowManager
                 f->setFlow(head->getFlow(), true);
                 delay(head->getDuration()); // TODO: replace with a scheduled function call, and update the repetitions left

@@ -8,15 +8,13 @@
 void FlowSensor::init_sensor() {
     int ret;
 
-    do {
-        // Soft reset the sensor
-        ret = resetSensor();
+    // Soft reset the sensor
+    ret = resetSensor();
 
-        if(ret != 0) {
-            delay(500); // wait long enough for chip reset to complete
-        }
-    } while (ret != 0);
-    
+    if(ret != 0) {
+        Serial.println("One flow sensor is disconnected!");
+    }
+
     delay(50); // wait long enough for chip reset to complete
 }
 
@@ -28,7 +26,7 @@ int FlowSensor::setLiquid(bool isWater) {
 
     ret = startReading(isWater);
     if(ret != 0) {
-        Serial.println("Error while writing measurement mode command");
+        Serial.println("Error while writing measurement mode command!");
     }
 
     return ret;
@@ -42,14 +40,13 @@ int16_t FlowSensor::readSensor() {
 
     Wire.requestFrom(0x08, 9);
 
-    if(Wire.available() < 9) {
-        Serial.println("Error while reading flow measurement");
+    if (Wire.available() < 9) {
+        Serial.println("Error while reading flow measurement!");
     }
 
     sensorFlowValue = Wire.read() << 8; // read the MSB from the sensor
     sensorFlowValue |= Wire.read(); // read the LSB from the sensor
     sensorFlowCRC = Wire.read();
-
     sensorTempValue = Wire.read() << 8; // read the MSB from the sensor
     sensorTempValue |= Wire.read(); // read the LSB from the sensor
     sensorTempCRC = Wire.read();
@@ -60,8 +57,8 @@ int16_t FlowSensor::readSensor() {
 
     ret = stopReading();
 
-    if(ret != 0) {
-        Serial.println("Error during write measurement mode command");
+    if (ret != 0) {
+        Serial.println("Error during write measurement mode command!");
     }
     else {
         signedFlowValue = (int16_t) sensorFlowValue;
@@ -76,7 +73,8 @@ int16_t FlowSensor::readSensor() {
  * Resets the flow rate sensor.
  */
 int FlowSensor::resetSensor() {
-    int ret = 1; 
+    int ret = 1;
+    int failures = 0;
     
     while (ret != 0) {
         Wire.beginTransmission(0x00);
@@ -84,8 +82,14 @@ int FlowSensor::resetSensor() {
         ret = Wire.endTransmission();
 
         if (ret != 0) {
+            // Stop trying after about 5 seconds of no response
+            if (failures > 200) {
+                return ret;
+            }
+
             Serial.println("Error while sending soft reset command, retrying...");
-            delay(500); // wait long enough for chip reset to complete
+            failures++;
+            delay(50); // wait long enough for chip reset to complete
         }
     }
     
@@ -98,7 +102,7 @@ int FlowSensor::resetSensor() {
 int FlowSensor::startReading(bool isWater) {    
     Wire.beginTransmission(0x08);
     
-    // Tell the sensor whether this is water
+    // Tell the sensor whether this is water or IPA
     if (isWater) {
         Wire.write(0x36);
         Wire.write(0x08);
@@ -109,7 +113,6 @@ int FlowSensor::startReading(bool isWater) {
     }
     
     int ret = Wire.endTransmission();
-    delay(50);
 
     return ret;
 }
@@ -123,7 +126,6 @@ int FlowSensor::stopReading() {
     Wire.write(0xF9);
     
     int ret = Wire.endTransmission();
-    delay(50);
 
     return ret;
 }

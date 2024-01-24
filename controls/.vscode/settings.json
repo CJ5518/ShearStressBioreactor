@@ -8,5 +8,6 @@
         "istream": "cpp",
         "ostream": "cpp",
         "sstream": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": false
 }

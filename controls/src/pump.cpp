@@ -5,33 +5,35 @@
  * Initialize the pump pin and turn the pump off.
  */
 void Pump::init(ModbusMaster controller) {
-    // Set the pump pin as output
-    pinMode(PUMP_PIN, OUTPUT); // TODO: remove once Modbus control is implemented
-
     this->controller = controller;
     // TODO: consider scheduling this 0.5-1 sec later to make sure the pump is on
-    //controller.writeSingleCoil(0x1004, true); // send the command to enable RS485 communication
+    controller.writeSingleCoil(0x1004, true); // send the command to enable RS485 communication
 
-    // Set the pump state to on since it has power by default for some reason
-    pumpOn = true;
-    togglePump(false); // turn the pump off
+    pumpOn = false;
 }
 
 /*
  * Turns the pump on if true is provided, off if false. The state of the pump is returned afterward.
  */
-bool Pump::togglePump(bool option) {
+bool Pump::setPump(bool option) {
     // Don't do anything if the pump is in the requested state already
     if(option != pumpOn) {
         pumpOn = option;
 
-        // Set the pin to the opposite state, since the pump is on the NC output from the relay
-        digitalWrite(PUMP_PIN, !pumpOn); // TODO: remove once Modbus control is implemented
-
-        //uint_16t result = controller.writeSingleCoil(0x1001, !pumpOn); // setting this coil to a nonzero value turns the pump on
+        uint16_t result = controller.writeSingleCoil(0x1001, pumpOn); // setting this coil to a nonzero value turns the pump on
+        if (result != controller.ku8MBSuccess) {
+            Serial.printf("Unable to switch pump state! Error code: %d\n", result);
+        }
     }
     
     return pumpOn;
+}
+
+/*
+ * Sets the pump to the opposite of its current state, and returns the new state.
+ */
+bool Pump::togglePump() {
+    return setPump(!pumpOn);
 }
 
 /*

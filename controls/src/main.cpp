@@ -37,15 +37,15 @@ void postTransmission() {
  * Start serial connection and initialize the pump and flow manager.
  */
 void setup() {
-    Serial.begin(9600); // for USB debugging
+    Serial.begin(115200); // for USB debugging
     Serial2.begin(9600, SERIAL_8E1, MODBUS_RX, MODBUS_TX); // for pump control
     Wire.begin();
     while (!Serial || !Serial2) {} // wait until connections are ready
 
     controller.begin(0xC0, Serial2); // 0xC0 is the default pump address with all DIP switches off
-    //pinMode(MAX485_RE_NEG, OUTPUT);
-    //pinMode(MAX485_DE, OUTPUT);
-    //postTransmission(); // start in receive mode
+    pinMode(MAX485_RE_NEG, OUTPUT);
+    pinMode(MAX485_DE, OUTPUT);
+    postTransmission(); // start in receive mode
 
     // These functions will be called automatically by the controller to make sure the MAX485 is configured correctly
     controller.preTransmission(preTransmission);
@@ -66,7 +66,6 @@ void setup() {
  */
 void loop() {
     delay(1000);
-    p.togglePump(false);
-    delay(1000);
-    p.togglePump(true);
+    Serial.printf("Current flow rate: %.2f\n", fm.takeAvgNumReadings(true, 10));
+    p.togglePump();
 }
