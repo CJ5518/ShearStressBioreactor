@@ -1,9 +1,17 @@
 #include "flowManager.hpp"
 
 /*
+ * Creates a FlowManager object that will use the provided pump controller. I2C communication and steppers are also initialized.
+ */
+FlowManager::FlowManager(Pump* p) {
+    pump = p;
+    init();
+}
+
+/*
  * Initialize the I2C expander, the stepper drivers and the sensors.
  */
-void FlowManager::init(Pump* p) {
+void FlowManager::init() {
     // Low flow sensor is connected as device 0
     // High flow sensor is connected as device 1
     tca.init(0, 1);
@@ -21,8 +29,6 @@ void FlowManager::init(Pump* p) {
     lowFS.init_sensor();
     tca.tcaSelect(1);
     highFS.init_sensor();
-
-    pump = p; // save a pointer to the pump controller so the speed can be set
 }
 
 /*

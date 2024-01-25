@@ -1,15 +1,34 @@
 #include "routineManager.hpp"
+#include "utils.hpp"
+#include <Wire.h>
 
 /*
  * Set the private pointers to the provided FlowManager and Pump objects, and run the test routine if requested.
  */
-void RoutineManager::init(FlowManager* fm, Pump* pump, bool test) {
-    f = fm;
-    p = pump;
+void RoutineManager::init(bool test) {
+    Serial.begin(115200); // for USB debugging
+    Serial2.begin(9600, SERIAL_8E1, MODBUS_RX, MODBUS_TX); // for pump control
+    Wire.begin();
+    while (!Serial || !Serial2) {} // wait until connections are ready
+
+    controller.begin(0xC0, Serial2); // 0xC0 is the default pump address with all DIP switches off
+    pinMode(MAX485_RE_NEG, OUTPUT);
+    pinMode(MAX485_DE, OUTPUT);
+    postTransmission(); // start in receive mode
+
+    // These functions will be called automatically by the controller to make sure the MAX485 is configured correctly
+    controller.preTransmission(RoutineManager::preTransmission);
+    controller.postTransmission(RoutineManager::postTransmission);
+
+    p = new Pump(controller);
+    f = new FlowManager(p);
+
+    controller.writeSingleCoil(0x1004, true); // send the command to enable RS485 communication
 
     if (test) {
         Task* head = buildTestRoutine();
         run(head);
+        deleteRoutine(head);
     }
 }
 
@@ -76,4 +95,20 @@ void RoutineManager::deleteRoutine(Task* head) {
     if (head->getNext() == NULL) {
         delete head;
     }
+}
+
+/*
+ * Set RE and DE pins to indicate a message will be sent.
+ */
+void RoutineManager::preTransmission() {
+  digitalWrite(MAX485_RE_NEG, 1);
+  digitalWrite(MAX485_DE, 1);
+}
+
+/*
+ * Reset RE and DE pins to indicate the device is ready to receive messages.
+ */
+void RoutineManager::postTransmission() {
+  digitalWrite(MAX485_RE_NEG, 0);
+  digitalWrite(MAX485_DE, 0);
 }

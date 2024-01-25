@@ -34,11 +34,14 @@ class FlowManager {
 
         StepperMotor lowMotor;
         StepperMotor highMotor;
+
+        void init();
     public:
-        void init(Pump* p);
+        int stepsTaken = 0;
+
+        FlowManager(Pump* p);
         void setFlow(float tgtFlowRate, bool isWater);
         void closeFlow(bool lowFlow);
         float takeAvgNumReadings(bool lowFlow, int numReadings);
-        int stepsTaken = 0;
 };
 

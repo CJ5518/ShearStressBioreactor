@@ -4,7 +4,8 @@
 
 class Pump {
     public:
-        void init(ModbusMaster controller);
+        Pump(ModbusMaster controller);
+
         bool setPump(bool option);
         bool togglePump();
         int setSpeed(int speed);
