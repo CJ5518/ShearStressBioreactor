@@ -1,10 +1,10 @@
-#include "task.hpp"
+#include "event.hpp"
 
 /*
  * Constructor for a constant flow rate specifier task that sets the target flow rate and duration to the provided values.
  * The number of repetitions is set to 1 by default, and the offDuration is set to 0.
  */
-Task::Task(float newFlow, int newDuration) {
+Event::Event(float newFlow, int newDuration) {
     flow = newFlow;
     duration = newDuration;
     repetitions = 1;
@@ -16,7 +16,7 @@ Task::Task(float newFlow, int newDuration) {
  * Constructor for a cycle task that sets the flow rate, duration, and number of repetitions to the provided values. The off
  * duration is set to the provided on duration as well.
  */
-Task::Task(float newFlow, int newDuration, int newRepetitions) {
+Event::Event(float newFlow, int newDuration, int newRepetitions) {
     flow = newFlow;
     duration = newDuration;
     offDuration = duration; // stay off and on for the same amount of time
@@ -28,7 +28,7 @@ Task::Task(float newFlow, int newDuration, int newRepetitions) {
  * Constructor for a cycle task that sets the flow rate, duration, number of repetitions and duration to stay off
  * to the provided values.
  */
-Task::Task(float newFlow, int newDuration, int newRepetitions, int newOffDuration) {
+Event::Event(float newFlow, int newDuration, int newRepetitions, int newOffDuration) {
     flow = newFlow;
     duration = newDuration;
     offDuration = newOffDuration;
@@ -39,7 +39,7 @@ Task::Task(float newFlow, int newDuration, int newRepetitions, int newOffDuratio
 /*
  * Sets the flow rate member to the provided value and returns the old value.
  */
-float Task::setFlow(float newFlow) {
+float Event::setFlow(float newFlow) {
     int old = flow;
     flow = newFlow;
     return old;
@@ -48,7 +48,7 @@ float Task::setFlow(float newFlow) {
 /*
  * Sets the repetitions member to the provided value and returns the old value.
  */
-int Task::setRepetitions(int newRepetitions) {
+int Event::setRepetitions(int newRepetitions) {
     int old = repetitions;
     repetitions = newRepetitions;
     return old;
@@ -57,14 +57,14 @@ int Task::setRepetitions(int newRepetitions) {
 /*
  * Decrements the repetitions member by 1 and returns the old value.
  */
-int Task::decRepetitions() {
+int Event::decRepetitions() {
     return repetitions--;
 }
 
 /*
  * Sets the duration of this task to the provided value and returns the old value.
  */
-int Task::setDuration(int newDuration) {
+int Event::setDuration(int newDuration) {
     int old = duration;
     duration = newDuration;
     return old;
@@ -73,7 +73,7 @@ int Task::setDuration(int newDuration) {
 /*
  * Sets the off duration of this task to the provided value and returns the old value.
  */
-int Task::setOffDuration(int newDuration) {
+int Event::setOffDuration(int newDuration) {
     int old = offDuration;
     offDuration = newDuration;
     return old;
@@ -82,8 +82,8 @@ int Task::setOffDuration(int newDuration) {
 /*
  * Sets the provided task as the next task following this one, and returns the old value of the next pointer.
  */
-Task* Task::setNext(Task* newTask) {
-    Task* oldTask = next;
+Event* Event::setNext(Event* newTask) {
+    Event* oldTask = next;
     next = newTask;
     
     return oldTask;
@@ -92,9 +92,9 @@ Task* Task::setNext(Task* newTask) {
 /*
  * Appends the provided task to the end of the linked list, and returns the number of tasks following this one in the new list.
  */
-int Task::append(Task* newTask) {
+int Event::append(Event* newTask) {
     int i = 1; // account for the new task
-    Task* head = this;
+    Event* head = this;
 
     // Loop until there is no next task
     while (head->next != NULL) {
@@ -109,34 +109,34 @@ int Task::append(Task* newTask) {
 /*
  * Returns the target flow rate of this task.
  */
-float Task::getFlow() {
+float Event::getFlow() {
     return flow;
 }
 
 /*
  * Returns the repetitions of this task if it is a cycle.
  */
-int Task::getRepetitions() {
+int Event::getRepetitions() {
     return repetitions;
 }
 
 /*
  * Returns the value of the duration member of this task.
  */
-int Task::getDuration() {
+int Event::getDuration() {
     return duration;
 }
 
 /*
  * Returns the duration this task will stay off.
  */
-int Task::getOffDuration() {
+int Event::getOffDuration() {
     return offDuration;
 }
 
 /*
  * Returns a pointer to the next task in the linked list.
  */
-Task* Task::getNext() {
+Event* Event::getNext() {
     return next;
 }

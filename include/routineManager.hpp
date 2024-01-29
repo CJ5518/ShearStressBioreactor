@@ -1,15 +1,15 @@
 #pragma once
 
-#include "task.hpp"
+#include "event.hpp"
 #include "pump.hpp"
 #include "flowManager.hpp"
 
 class RoutineManager {
     public:
         void init(bool test);
-        Task* buildTestRoutine();
-        void run(Task* head);
-        void deleteRoutine(Task* head);
+        Event* buildTestRoutine();
+        void run(Event* head);
+        void deleteRoutine(Event* head);
 
         // Callback functions to be used by ModbusMaster
         static void postTransmission();
