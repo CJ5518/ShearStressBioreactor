@@ -2,16 +2,10 @@
 #include "utils.hpp"
 #include <Wire.h>
 
-#define _TASK_TIMECRITICAL      // measure delay between scheduled time and actual start time
-#define _TASK_STATUS_REQUEST    // use status requests to delay tasks until another has completed
-#define _TASK_WDT_IDS           // for displaying control points and task IDs for debugging
-#define _TASK_TIMEOUT           // a timeout can be set for when tasks should be deactivated
-#include <TaskScheduler.h>
-
 /*
  * Set the private pointers to the provided FlowManager and Pump objects, and run the test routine if requested.
  */
-void RoutineManager::init(bool test) {
+void RoutineManager::init(Scheduler taskScheduler, bool test) {
     Serial.begin(115200); // for USB debugging
     Serial2.begin(9600, SERIAL_8E1, MODBUS_RX, MODBUS_TX); // for pump control
     Wire.begin();
@@ -28,6 +22,7 @@ void RoutineManager::init(bool test) {
 
     p = new Pump(controller);
     f = new FlowManager(p);
+    ts = taskScheduler;
 
     controller.writeSingleCoil(0x1004, true); // send the command to enable RS485 communication
 
@@ -64,32 +59,60 @@ Event* RoutineManager::buildTestRoutine() {
 }
 
 /*
- * Runs the list of tasks linked to the provided head task pointer.
+ * Saves the provided linked list of events, and calls the run() function to begin scheduing of events.
  */
-void RoutineManager::run(Event* head) {
-    // Loop through all tasks in the linked list
-    while (head != NULL) {
-        // Loop until the requested number of repetitions is reached
-        for (int i = 0; i < head->getRepetitions(); i++) {
-            // When a flow rate of 0 is requested, or this is an odd repetition in a cycle, turn off the pump
-            if (head->getFlow() == 0 || i % 2 == 1) {
-                p->setPump(false); // TODO: ensure the new pump can handle being toggled frequently
-                delay(head->getOffDuration()); // TODO
-            }
-            else {
-                p->setPump(true); // make sure the pump is on in all other cases
-                // Try to achieve this flow rate with this flowManager
-                f->setFlow(head->getFlow(), true);
-                delay(head->getDuration()); // TODO: replace with a scheduled function call, and update the repetitions left
-            }
+void RoutineManager::run(Event* newHead) {
+    head = newHead;
+    run();
+}
 
-            // TODO: check whether the target flow was reached in the duration requested and display a warning if not
-            Serial.println("Task duration completed.");
+/*
+ * Recursively schedules the events contained in the linked list starting with static member head.
+*/
+void RoutineManager::run() {
+    // Decrement the number of repetitions left, and check if it was 0
+    if (head->decRepetitions() == 0) {
+        head = head->getNext(); // move to the next event
+
+        if (head == NULL) {
+            Serial.println("Routine execution has finished.");
+            return;
         }
-
-        // TODO: remove while loop, schedule a recursive call after duration for the next node instead
-        head = head->getNext(); // do the next task, once it no longer exists the loop will exit
     }
+
+    Task t1; // initialize the next task
+    t1.setCallback(&run);
+
+    // If an offDuration has been set for this Event, and the last call did not turn off the pump, set the static flag for the next call to run()
+    if (head->getOffDuration() > 0 && !offCycle) {
+        offCycle = true;
+    }
+    else {
+        offCycle = false; // if this event has no offDuration, or the last call turned off the pump, turn it on this time
+    }
+
+    // When a flow rate of 0 is requested, or this is an odd repetition in a cycle with specified offDuration, turn off the pump
+    if (head->getFlow() == 0 || offCycle) {
+        p->setPump(false);
+        t1.delay(head->getOffDuration());
+    }
+    else {
+        p->setPump(true); // make sure the pump is on in all other cases
+        // Try to achieve this flow rate with the flowManager, with a timeout set
+        Task t2(TASK_IMMEDIATE, TASK_ONCE, &setFlow, &ts, true);
+        // Schedule the next task for after the requested duration for this flow rate
+        t1.delay(head->getDuration());
+    }
+
+    ts.addTask(t1);
+    t1.enableDelayed();
+}
+
+/*
+ * Callback-friendly function that calls FlowManager::setFlow with the head event's flow rate.
+ */
+void RoutineManager::setFlow() {
+    f->setFlow(head->getFlow());
 }
 
 /*

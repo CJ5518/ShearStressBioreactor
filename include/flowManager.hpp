@@ -40,7 +40,7 @@ class FlowManager {
         int stepsTaken = 0;
 
         FlowManager(Pump* p);
-        void setFlow(float tgtFlowRate, bool isWater);
+        void setFlow(float tgtFlowRate);
         void closeFlow(bool lowFlow);
         float takeAvgNumReadings(bool lowFlow, int numReadings);
 };

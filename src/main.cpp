@@ -3,15 +3,16 @@
 #include "../include/routineManager.hpp"
 
 RoutineManager rm;
+Scheduler ts;
 
 void setup() {
     // Init RoutineManager
-    rm.init(false);
+    rm.init(ts, false);
     // Init GUI, passing in RoutineManager instance pointer?
 
 }
 
 // Hopefully not needed once freeRTOS is implemented
 void loop() {
-
+    ts.execute();
 }

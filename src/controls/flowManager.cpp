@@ -34,7 +34,7 @@ void FlowManager::init() {
 /*
  * Opens the relevant valve until the target flow rate is achieved.
  */
-void FlowManager::setFlow(float targetFlow, bool isWater) {
+void FlowManager::setFlow(float targetFlow) {
     bool lowFlowSys; // whether the low valve should be used
     bool flowInRange = false; // will be obsolete once the loop is moved
     bool openValve; // whether the valve should be opened or closed
