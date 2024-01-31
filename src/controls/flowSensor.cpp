@@ -11,11 +11,9 @@ void FlowSensor::init_sensor() {
     // Soft reset the sensor
     ret = resetSensor();
 
-    if(ret != 0) {
+    if (ret != 0) {
         Serial.println("One flow sensor is disconnected!");
     }
-
-    delay(50); // wait long enough for chip reset to complete
 }
 
 /*
@@ -25,7 +23,7 @@ int FlowSensor::setLiquid(bool isWater) {
     int ret;
 
     ret = startReading(isWater);
-    if(ret != 0) {
+    if (ret != 0) {
         Serial.println("Error while writing measurement mode command!");
     }
 
@@ -83,13 +81,13 @@ int FlowSensor::resetSensor() {
 
         if (ret != 0) {
             // Stop trying after about 5 seconds of no response
-            if (failures > 200) {
+            if (failures > 50) {
                 return ret;
             }
 
             Serial.println("Error while sending soft reset command, retrying...");
             failures++;
-            delay(50); // wait long enough for chip reset to complete
+            delay(100); // wait long enough for chip reset to complete
         }
     }
     

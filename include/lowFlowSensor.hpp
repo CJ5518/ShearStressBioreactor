@@ -7,7 +7,7 @@
  */
 class SLF3S1300F : public FlowSensor {
     public:
-        const float SCALE_FACTOR_FLOW = 500.0; 
+        const float SCALE_FACTOR_FLOW = 500.0;
 
         float scaleReadings(int16_t val);
 };

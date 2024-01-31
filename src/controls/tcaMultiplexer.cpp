@@ -7,7 +7,7 @@
  * Select the device at the provided index.
  */
 void I2C_Expander::tcaSelect(uint8_t i) {
-    if(i > 7) {
+    if (i > 7) {
         return;
     }
 
@@ -22,22 +22,13 @@ void I2C_Expander::tcaSelect(uint8_t i) {
 void I2C_Expander::init(unsigned int lowSensor, unsigned int highSensor) {
     lowSensorAddr = lowSensor;
     highSensorAddr = highSensor;
-
-    for(int i = 0; i < 8; i++) {
-        if(i == lowSensor || i == highSensor) {
-            activeSensors[i] = 1;
-        }
-        else {
-            activeSensors[i] = 0;
-        }
-    }
 }
 
 /*
  * Select the low sensor if true is provided, otherwise the high sensor is selected.
  */
 void I2C_Expander::readSensor(bool lowSensor) {
-    if(lowSensor) {
+    if (lowSensor) {
         tcaSelect(lowSensorAddr);
     }
     else {

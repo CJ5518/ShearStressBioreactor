@@ -12,7 +12,6 @@ class I2C_Expander {
         int getHighSensorAddr();
     private:
         const int TCA_ADDR = 0x70;
-        int activeSensors[8];
         int lowSensorAddr;
         int highSensorAddr;
 };

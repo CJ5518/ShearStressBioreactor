@@ -146,27 +146,19 @@ float FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
     float avg = 0.0;
     float reading;
 
+    // Select the requested sensor and set the liquid to water
+    tca.readSensor(lowFlow); // select the requested sensor
+    lowFS.setLiquid(true);
+    delay(12); // minimum reliable delay between selecting the sensor and reading from it
+
     // Loop the requested number of times
     for (int i = 0; i < numReadings; i++) {
-        if (lowFlow) {
-            tca.tcaSelect(1);
-            lowFS.setLiquid(true);
-            delay(50); // TODO: determine how important it is to wait
-            
-            reading = lowFS.scaleReadings(lowFS.readSensor());
+        if (lowFlow) {            
+            avg += lowFS.scaleReadings(lowFS.readSensor());
         }
         else {
-            tca.tcaSelect(0);
-            highFS.setLiquid(true);
-            delay(50);
-
-            reading = highFS.scaleReadings(highFS.readSensor());
+            avg += highFS.scaleReadings(highFS.readSensor());
         }
-
-        avg += reading;
-
-        Serial.print("Read flow rate: ");
-        Serial.println(reading);
     }
 
     return avg / numReadings;
