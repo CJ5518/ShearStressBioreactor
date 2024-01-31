@@ -1,6 +1,21 @@
+#define _TASK_TIMECRITICAL      // measure delay between scheduled time and actual start time
+//#define _TASK_STATUS_REQUEST    // use status requests to delay tasks until another has completed
+//#define _TASK_WDT_IDS           // for displaying control points and task IDs for debugging
+#define _TASK_TIMEOUT           // a timeout can be set for when tasks should be deactivated
+
+#include <TaskScheduler.h>
+
 #include "routineManager.hpp"
 #include "utils.hpp"
 #include <Wire.h>
+
+static Scheduler ts;
+static bool offCycle;
+
+static FlowManager* f;
+static Pump* p;
+static ModbusMaster controller;
+static Event* head;
 
 /*
  * Set the private pointers to the provided FlowManager and Pump objects, and run the test routine if requested.
@@ -31,6 +46,14 @@ void RoutineManager::init(Scheduler taskScheduler, bool test) {
         run(head);
         deleteRoutine(head);
     }
+
+    // Testing for flow sensor data
+    /*unsigned long start;
+
+    while (true) {
+        start = micros();
+        Serial.printf("Average flow rate: %.5fml/min, measured in %dus\n", f->takeAvgNumReadings(false, 10), micros() - start);
+    }*/
 }
 
 /*
