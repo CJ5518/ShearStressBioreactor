@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.S": "platformio-debug.asm",
         "functional": "cpp",
         "type_traits": "cpp",
         "*.tcc": "cpp",
@@ -7,7 +8,9 @@
         "fstream": "cpp",
         "istream": "cpp",
         "ostream": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "cstdio": "cpp",
+        "new": "cpp"
     },
     "cmake.configureOnOpen": false
 }

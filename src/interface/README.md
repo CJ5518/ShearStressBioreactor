@@ -4,6 +4,6 @@ This folder contains the software which provides the user interface of the proje
 # On building
 To put the SPIFFS files onto the board, please follow the instructions here https://randomnerdtutorials.com/esp32-vs-code-platformio-spiffs/
 
-This process also makes it so that, for whatever reason, I have to hold one of the buttons on the board down when I plug it in, otherwise platformio will complain and not want to upload things to it. 
+Also, be sure to hold one of the buttons on the ESP if platformio is complaining about being unable to connect.
 
 This process is a little annoying, but makes the web development a lot easier.

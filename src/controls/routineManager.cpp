@@ -21,7 +21,6 @@ static Event* head;
  * Set the private pointers to the provided FlowManager and Pump objects, and run the test routine if requested.
  */
 void RoutineManager::init(Scheduler taskScheduler, bool test) {
-    Serial.begin(115200); // for USB debugging
     Serial2.begin(9600, SERIAL_8E1, MODBUS_RX, MODBUS_TX); // for pump control
     Wire.begin();
     while (!Serial || !Serial2) {} // wait until connections are ready
