@@ -2,7 +2,7 @@
 
 #include "routineManager.hpp"
 #include "ESPAsyncWebServer.h"
-#include <TaskSchedulerDeclarations.h> // this allows the reference to Scheduler while avoiding multiple declarations
+#include <TaskSchedulerDeclarations.h>
 
 
 //Class encapsulating the GUI of the program
@@ -10,18 +10,28 @@
 //from the html interface
 class GUI {
 public:
-    GUI();
-    //Inits the server in the constructor
-    GUI(RoutineManager* rm);
     //Inits the server
-    void init(RoutineManager* rm);
+    static void init(Scheduler* ts, RoutineManager* rm);
     //Closes all server connections and deletes the server,
     //recommend to call this to make sure the connections close cleanly
-    void end();
+    static void end();
 
-private:
+    //Only called by GUI.cpp
+    static void initWebServer();
+
+
+//private:
     //Pointer to external routine manager
-    RoutineManager* routineManager;
+    static RoutineManager* routineManager;
     //Pointer to internal web server
-    AsyncWebServer* server;
+    static AsyncWebServer* server;
+
+    //Tasks
+    static Task* wifi_connect_task;
+    static Task* wifi_watchdog_task;
+    //Task callbacks
+    static void wifi_connect_cb();
+    static void wifi_watchdog_cb();
+
+    static void onWifiEvent(arduino_event_id_t event, arduino_event_info_t info);
 };

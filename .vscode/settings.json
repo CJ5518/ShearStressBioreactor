@@ -10,7 +10,15 @@
         "ostream": "cpp",
         "sstream": "cpp",
         "cstdio": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "array": "cpp",
+        "deque": "cpp",
+        "string": "cpp",
+        "unordered_set": "cpp",
+        "vector": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "regex": "cpp"
     },
     "cmake.configureOnOpen": false
 }

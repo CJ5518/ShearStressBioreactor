@@ -11,8 +11,7 @@ void setup() {
     // Init RoutineManager
     rm.init(ts, false);
     // Init GUI, passing in RoutineManager instance pointer
-    gui.init(nullptr);
-    
+    gui.init(&ts, &rm);
 }
 
 void loop() {
