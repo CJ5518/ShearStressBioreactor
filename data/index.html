@@ -5,13 +5,32 @@
 		<title>
 			ESP 32
 		</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="styles.css">
 	</head>
 	<body>
-		<h1>
-			Connected!
+		<h1 class="center">
+			Status: Inactive
 		</h1>
-		<p>
-			You have successfully connected to the ESP32.
-		</p>
+		<div class="center"> 
+			<button class="mainButton" onclick="location.href='./routineManager.html'">
+				Routine Manager
+			</button>
+		</div>
+		<div class="center"> 
+			<button class="mainButton" onclick="location.href='./graphViewer.html'">
+				Graph Viewer
+			</button>
+		</div>
+		<div class="center"> 
+			<button class="mainButton">
+				Settings
+			</button>
+		</div>
+		<div class="center"> 
+			<button class="mainButton">
+				Help
+			</button>
+		</div>
 	</body>
 </html>

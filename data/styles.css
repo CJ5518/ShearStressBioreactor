@@ -1,0 +1,35 @@
+
+.center {
+	margin: auto;
+	width: 90%;
+	padding: 10px;
+	text-align: center;
+}
+
+.mainButton {
+	width: 60%;
+	font-size: 22px;
+}
+
+ul.no-bullets {
+	list-style-type: none; /* Remove bullets */
+	padding: 0; /* Remove padding */
+	margin: 0; /* Remove margins */
+}
+
+.routineManagerInput {
+	width: 18%;
+	font-size: 22px;
+}
+.routineManagerInputSmaller {
+	width: 10%;
+	font-size: 22px;
+}
+
+.routineManagerEntry {
+	width: 95%;
+	margin: auto;
+	border: 2px;
+	max-width: 800px;
+	margin-bottom: 10px;
+}
