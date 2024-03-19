@@ -5,7 +5,6 @@
 
 #include <TaskScheduler.h>
 #include <Wire.h>
-#include <HardwareSerial.h>
 #include "routineManager.hpp"
 #include "utils.hpp"
 
@@ -14,11 +13,17 @@ static bool offCycle;
 
 static FlowManager* f;
 static Pump* p;
-static YAAJ_ModbusMaster controller;
 static Event* head;
 
-static HardwareSerial modbusSerial(1);
-static HardwareSerial tSerial(2);
+//HardwareSerial modbusSerial(1);
+//HardwareSerial tSerial(2);
+extern YAAJ_ModbusMaster controller;
+
+/*
+ * Default constructor is currently undefined. A Scheduler object should be provided via init().
+ */
+RoutineManager::RoutineManager() {
+}
 
 /* 
  * Calls init with the provided Scheduler object and test flag.
@@ -31,78 +36,132 @@ RoutineManager::RoutineManager(Scheduler taskScheduler, bool test) {
  * Set the private pointers to the provided FlowManager and Pump objects, and run the test routine if requested.
  */
 void RoutineManager::init(Scheduler taskScheduler, bool test) {
-    tSerial.begin(9600, SERIAL_8N1, T_RX, T_TX); // sniff all messages sent on RS485 bus
-    controller.begin(modbusSerial, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MAX485_ENABLE, 200);
+    //modbusSerial = HardwareSerial(1);
+    //tSerial = HardwareSerial(2);
+
+    // tSerial.begin(9600, SERIAL_8N1, T_RX, T_TX); // sniff all messages sent on RS485 bus
+    // //modbusSerial.begin(9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX);
+    // controller.begin(modbusSerial, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MAX485_ENABLE, 500); // 500ms timeout
     Wire.begin();
-    while (!Serial || !tSerial || !modbusSerial) {} // wait until connections are ready
+    // while (!Serial || !tSerial || !modbusSerial) {} // wait until connections are ready
 
-    pinMode(MAX485_ENABLE, OUTPUT);
-    pinMode(T_WRITE_ENABLE, OUTPUT);
-
-    // Start in receive mode
-    digitalWrite(T_WRITE_ENABLE, LOW);
-    digitalWrite(MAX485_ENABLE, LOW);
+    // // Start in receive mode for the sniffer MAX485, enable pin for the main sender is set by controller
+    // //pinMode(T_WRITE_ENABLE, OUTPUT);
+    // //digitalWrite(T_WRITE_ENABLE, LOW);
     
     p = new Pump(controller);
     f = new FlowManager(p);
     ts = taskScheduler;
 
-    Serial.println("Completed setup, enabling RS485 communication.");
-    bool connected = false;
-    char* data = (char*) malloc(8 * sizeof(char));
+    // Serial.println("Completed setup, enabling RS485 communication.");
+    // modbusSerial.println("test");
+    // bool connected = false;
+    // char* data = (char*) malloc(8 * sizeof(char));
 
-    while (!connected) {
-        // Send the command to enable RS485 communication
-        uint16_t result = controller.F5_WriteSingleCoil(0x1004, 0xFF);
-        unsigned long start = millis();
+    // unsigned long start = -3000;
 
-        while (millis() - start < 1000) {
-            if (result != 0) {
-                Serial.printf("Unable to establish RS485 communication! Error code: %d\n", result);
+    // while (!connected) {
+    //     // Print anything sent
+    //     if (millis() - start < 1000) {
+    //         // Read all data on the RS485 bus
+    //         if (tSerial.available()) {
+    //             tSerial.readBytes(data, 8);
+    //             Serial.printf("Address: %X Function: %X Coil: %X %X Value: %X %X CRC: %X %X\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+    //         }
+    //     }
+    //     else {
+    //         // Send the command to enable RS485 communication
+    //         uint16_t result = controller.F5_WriteSingleCoil(0x1004, 0xFF);
+    //         if (result != 0) {
+    //             Serial.printf("Unable to establish RS485 communication with device %x! Error code: %d\n", controller.getSlaveAddr(), result);
+    //             controller.setSlaveAddr((controller.getSlaveAddr() + 1) % 256);
+    //         }
+    //         else {
+    //             connected = true;
+    //         }
 
-                // Read all data on the RS485 bus
-                if (tSerial.available()) {
-                    tSerial.readBytes(data, 8);
-                    Serial.printf("Address: %X Function: %X Coil: %X %X Value: %X %X CRC: %X %X\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-                }
-            }
-            else {
-                connected = true;
-            }
-        }
-    }
+    //         start = millis();
+    //     }
+    // }
 
-    /*//p->setPump(true);
-    // 41F0 = 30ml/min
-    // 43C7 = 398ml/min
-    // 258 = 438B = transition 2->1
-    // 127.5 = 4309 = transition from 1->.5
-    // 63.2 = 4287 = transition from .5->.25
-    p->setSpeed(0, 0x43C7);
-    delay(3000);
-    while (true) {
-        int32_t speed = p->getSpeed(true);
-        if (speed < 0) {
-            Serial.println("Unable to read flow rate setting.");
-        }
-        //p->togglePump();
-        p->setSpeed(0, speed -= 10);
-        delay(2000);
-    }*/
+    // Serial.printf("Final address: %X\n", controller.getSlaveAddr());
 
-    if (test) {
-        Event* head = buildTestRoutine();
-        run(head);
-        deleteRoutine(head);
-    }
+    // /*//p->setPump(true);
+    // // 41F0 = 30ml/min
+    // // 43C7 = 398ml/min
+    // // 258 = 438B = transition 2->1
+    // // 127.5 = 4309 = transition from 1->.5
+    // // 63.2 = 4287 = transition from .5->.25
+    // p->setSpeed(0, 0x43C7);
+    // delay(3000);
+    // while (true) {
+    //     int32_t speed = p->getSpeed(true);
+    //     if (speed < 0) {
+    //         Serial.println("Unable to read flow rate setting.");
+    //     }
+    //     //p->togglePump();
+    //     p->setSpeed(0, speed -= 10);
+    //     delay(2000);
+    // }*/
 
-    /*// Testing for flow sensor data
+    // /*if (test) {
+    //     Event* head = buildTestRoutine();
+    //     run(head);
+    //     deleteRoutine(head);
+    // }*/
+
+    // Testing for flow sensor data
     unsigned long start;
 
     for (int i = 0; i < 1000; i++) {
         start = millis();
         Serial.printf("Average flow rate: %.5fml/min, measured in %dms\n", f->takeAvgNumReadings(true, 1000), millis() - start);
-    }*/
+        /*controller.F5_WriteSingleCoil(0x1001, 0x00);
+        controller.F5_WriteSingleCoil(0x1003, 0x00);
+        controller.F5_WriteSingleCoil(0x1001, 0xFF);
+        delay(2000);*/
+    }
+}
+
+void RoutineManager::hardware(HardwareSerial tSerial1) {
+    controller.begin(tSerial1, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MODBUS_ENABLE, 500);
+}
+
+void RoutineManager::testControl(HardwareSerial tSerial1, HardwareSerial tSerial2) {
+    tSerial2.begin(9600, SERIAL_8N1, T_RX, T_TX); // sniffer
+
+    while (!Serial || !tSerial1) {} // wait until connections are ready
+
+    pinMode(MODBUS_ENABLE, OUTPUT);
+    pinMode(T_WRITE_ENABLE, OUTPUT);
+
+    // Start in receive mode
+    digitalWrite(MODBUS_ENABLE, LOW);
+    digitalWrite(T_WRITE_ENABLE, LOW);
+
+    Serial.println("Completed setup, enabling RS485 communication.");
+
+    unsigned long start = -10000;
+    char* response = (char*) malloc(8 * sizeof(char));
+
+    while(true) {
+        // Wait 2s between sending commands in case the pump responds
+        if (millis() - start < 2000) {
+            // Print anything seen by the second board
+            if (tSerial2.available()) {
+            tSerial2.readBytes(response, 8);
+            Serial.printf("Took %dms to receive command. Address: %X Function: %X Coil: %X %X Value: %X %X CRC: %X %X\n", millis() - start, response[0], response[1], response[2], response[3], response[4], response[5], response[6], response[7]);
+            }
+        }
+        else {
+            // Send the command to enable RS485 communication
+            Serial.printf("Sending enable command to address: %d\n", controller.getSlaveAddr());
+            start = millis();
+            if (controller.F5_WriteSingleCoil(0x1004, 0xFF) == 0) {
+                return;
+            }
+        }
+    }
 }
 
 /*
