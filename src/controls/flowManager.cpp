@@ -25,10 +25,11 @@ void FlowManager::init() {
     // High motor is driver 2 with larger text: PUL (step): 26 DIR: 27 ENA: 25
     highMotor.init(27, 26, 25);
 
+    // Create flow sensor objects and send initial reset commands
     tca.tcaSelect(0);
-    lowFS.init_sensor();
+    lowFS.initSensor();
     tca.tcaSelect(1);
-    highFS.init_sensor();
+    highFS.initSensor();
 }
 
 /*
@@ -140,25 +141,34 @@ void FlowManager::setFlow(float targetFlow) {
 }
 
 /*
- * Reads from the specified flow sensor the requested number of times, and sets the global flowAvg to the average value.
+ * Reads from the specified flow sensor the requested number of times, and returns the average value.
  */
 float FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
     float avg = 0.0;
     float reading;
 
-    // Select the requested sensor and set the liquid to water
-    tca.readSensor(lowFlow); // select the requested sensor
-    lowFS.setLiquid(true);
-    delay(12); // minimum reliable delay between selecting the sensor and reading from it
-
+    // Select the requested sensor and set the liquid to water which starts reading
+    tca.readSensor(lowFlow); // select requested sensor address
+    
     // Loop the requested number of times
     for (int i = 0; i < numReadings; i++) {
-        if (lowFlow) {            
-            avg += lowFS.scaleReadings(lowFS.readSensor());
+        if (lowFlow) {
+            lowFS.setLiquid(true);
         }
         else {
-            avg += highFS.scaleReadings(highFS.readSensor());
+            highFS.setLiquid(true);
         }
+        delay(12); // minimum reliable delay between selecting the sensor and reading from it
+
+        if (lowFlow) {
+            reading = lowFS.scaleReadings(lowFS.readSensor());
+        }
+        else {
+            reading = highFS.scaleReadings(highFS.readSensor());
+        }
+
+        Serial.println(reading);
+        avg += reading;
     }
 
     return avg / numReadings;

@@ -37,10 +37,13 @@ class FlowSensor {
         byte sensorFlowCRC;
         byte sensorTempCRC;
 
-        void init_sensor();
+        void initSensor();
         int16_t readSensor();
         int setLiquid(bool isWater);
         int resetSensor();
         int startReading(bool isWater);
         int stopReading();
+
+        virtual const char* name() = 0;
+        virtual float scaleReadings(int16_t val) = 0;
 };
