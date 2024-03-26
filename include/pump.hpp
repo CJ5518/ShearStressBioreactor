@@ -18,20 +18,27 @@ class Pump {
         YAAJ_ModbusMaster controller;
 
         // Pump speeds in ml/min above which the precision of the pump decreases by a factor of 2
-        const int STEP_1 = 64;
-        const int STEP_2 = 128;
-        const int STEP_3 = 256;
+        const int STEP_0 = 8;
+        const int STEP_1 = 16;
+        const int STEP_2 = 32;
+        const int STEP_3 = 64;
+        const int STEP_4 = 128;
+        const int STEP_5 = 256;
 
         // Register values corresponding to the above speeds
-        const int STEP_0_CMD = 0x3DCC; // TODO: confirm this equates to 0 ml/min
-        const int STEP_1_CMD = 0x4280;
-        const int STEP_2_CMD = 0x4300;
-        const int STEP_3_CMD = 0x4380;
-        const int STEP_4_CMD = 0x43C8; // TODO: currently 398 ml/min instead of 400, not necessarily important
+        const uint16_t STEP_0_CMD = 0x4100;
+        const uint16_t STEP_1_CMD = 0x4180;
+        const uint16_t STEP_2_CMD = 0x4200;
+        const uint16_t STEP_3_CMD = 0x4280;
+        const uint16_t STEP_4_CMD = 0x4300;
+        const uint16_t STEP_5_CMD = 0x4380;
+        const uint16_t STEP_6_CMD = 0x43C8;
 
-        // Change in pump speed in ml/min for increase of 1 in register value
-        const int RATE_0 = 1 / 0.25;
-        const int RATE_1 = 1 / 0.5;
-        const int RATE_2 = 1 / 1;
-        const int RATE_3 = 1 / 2;
+        // Number of register value increments to change pump speed by 1 ml/min
+        const int RATE_0 = 16;      // 1 / 0.0625 ml/min
+        const int RATE_1 = 8;       // 1 / 0.125
+        const int RATE_2 = 4;       // 1 / 0.25
+        const int RATE_3 = 2;       // 1 / 0.5
+        const int RATE_4 = 1;       // 1 / 1
+        const double RATE_5 = 0.5;  // 1 / 2
 };

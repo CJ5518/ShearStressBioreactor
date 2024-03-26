@@ -38,33 +38,38 @@ bool Pump::togglePump() {
  */
 bool Pump::setSpeed(int flow) {
     // Contstrain values to within the pump range (although the pump controller does this as well for 0.1-420ish ml/min)
-    if (flow < 10) {
-        flow = 10;
+    if (flow < 8) {
+        flow = 8;
     }
     else if (flow > 400) {
         flow = 400;
     }
 
     uint16_t low = 0;
-    int min = 0;
-    int rate = 0;
+    uint16_t high = 0;
 
-    // TODO: verify accuracy for requested rates close to a step
     // Start with the known register value at the edge of the precision level, then add the needed steps
-    if (flow < STEP_1) {
-        low = STEP_0_CMD + flow * RATE_0;
+    if (flow <= STEP_1) {
+        low = STEP_0_CMD + ((flow - STEP_0) * RATE_0);
     }
-    else if (flow >= STEP_1 && flow < STEP_2) {
+    else if (flow > STEP_1 && flow <= STEP_2) {
         low = STEP_1_CMD + ((flow - STEP_1) * RATE_1);
     }
-    else if (flow >= STEP_2 && flow < STEP_3) {
+    else if (flow > STEP_2 && flow <= STEP_3) {
         low = STEP_2_CMD + ((flow - STEP_2) * RATE_2);
     }
-    else if (flow >= STEP_3) {
+    else if (flow > STEP_3 && flow <= STEP_4) {
         low = STEP_3_CMD + ((flow - STEP_3) * RATE_3);
     }
+    else if (flow > STEP_4 && flow <= STEP_5) {
+        low = STEP_4_CMD + ((flow - STEP_4) * RATE_4);
+    }
+    else if (flow > STEP_5) {
+        low = STEP_5_CMD + (int) ((flow - STEP_5) * RATE_5);
+        high = (flow % 2) * (0x8000); // add half of a step to achieve odd numbers
+    }
 
-    return setSpeed(0, low);
+    return setSpeed(high, low);
 }
 
 /*

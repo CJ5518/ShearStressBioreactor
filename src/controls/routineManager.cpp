@@ -45,7 +45,7 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
 
     Serial.println("Initializing pump and flow manager objects.");
     p = new Pump(controller);
-    f = new FlowManager(p);
+    //f = new FlowManager(p);
     ts = taskScheduler;
 
     // Run the test routine if requested
@@ -72,21 +72,16 @@ void RoutineManager::collectFlowRates() {
  * Tests a range of pump speed settings to help determine the conversion to ml/min.
  */
 void RoutineManager::testControl() {
-    //p->setPump(true);
-    // 41F0 = 30ml/min
-    // 43C7 = 398ml/min
-    // 258 = 438B = transition 2->1
-    // 127.5 = 4309 = transition from 1->.5
-    // 63.2 = 4287 = transition from .5->.25
-    p->setSpeed(0, 0x437F);
-    delay(3000);
-    while (true) {
+    p->getSpeed(true);
+    delay(500);
+
+    for (int i = 0; i < 400; i++) {
+        p->setSpeed(i);
         int32_t speed = p->getSpeed(true);
         if (speed < 0) {
             Serial.println("Unable to read flow rate setting.");
         }
-        p->setSpeed(0, speed + 1);
-        delay(3000);
+        delay(100);
     }
 }
 
