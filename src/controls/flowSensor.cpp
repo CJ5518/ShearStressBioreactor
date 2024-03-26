@@ -85,7 +85,7 @@ int FlowSensor::resetSensor() {
                 return ret;
             }
 
-            Serial.printf("Error while sending reset command to the %s.\n", name());
+            Serial.printf("Error %d while sending reset command to the %s.\n", ret, name());
             failures++;
             delay(100); // wait long enough for chip reset to complete
         }

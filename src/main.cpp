@@ -2,8 +2,13 @@
 #include "GUI.hpp"
 
 // Used for sending and receiving Modbus commands
-HardwareSerial tSerial1(1);
-HardwareSerial tSerial2(2);
+HardwareSerial ModbusSerial(1);
+//HardwareSerial SnifferSerial(2);
+
+// Receive and transmit pins for the MAX485
+const int MODBUS_RX = 16;
+const int MODBUS_TX = 17;
+const int MODBUS_ENABLE = 18; // automatically set to high when writing, low otherwise to receive
 
 YAAJ_ModbusMaster controller;
 
@@ -11,32 +16,22 @@ RoutineManager rm;
 Scheduler ts;
 GUI gui;
 
-// Receive and transmit pins for the MAX485
-const int MODBUS_RX = 16;
-const int MODBUS_TX = 32; //17;
-const int MODBUS_ENABLE = 18;
-
-// Receive and transmit pins for the second MAX485
-const int T_RX = 5;
-const int T_TX = 19;
-const int T_WRITE_ENABLE = 23;
-
 void setup() {
     Serial.begin(115200); // for USB debugging
+    controller.begin(ModbusSerial, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MODBUS_ENABLE, 500);
+    while (!Serial || !ModbusSerial) {} // wait until connections are ready
 
-    //Serial.begin(9600); // USB debugging
-    //tSerial1.begin(9600, SERIAL_8N1, T_RX_1, T_TX_1); // default sender, begun by controller.begin
-    //Wire.begin();
+    // RoutineManager initialization
+    rm.init(&ts, false);
+    //SnifferSerial.begin(9600, SERIAL_8N1, 21, 19);
+    //rm.testControl(SnifferSerial); // pump control testing
+    //rm.collectFlowRates(); // testing for flow sensor data
 
+    // Init GUI, passing in RoutineManager instance pointer
+    gui.init(&ts, &rm);
+    Serial.println("Setup complete.");
+}
 
-    //Serial.printf("Address: %X Function: %X Coil: %X %X Value: %X %X CRC: %X %X\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+void loop() {
 
-        //Serial.setDebugOutput(true);
-        // Init RoutineManager
-        //rm.init(ts, false);
-        // Init GUI, passing in RoutineManager instance pointer
-        //gui.init(&ts, &rm);
-        rm.hardware(tSerial1);
-        rm.testControl(tSerial1, tSerial2);
-        rm.init(ts, false);
 }

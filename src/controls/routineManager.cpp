@@ -3,20 +3,18 @@
 //#define _TASK_WDT_IDS           // for displaying control points and task IDs for debugging
 #define _TASK_TIMEOUT           // a timeout can be set for when tasks should be deactivated
 
-#include <TaskScheduler.h>
-#include <Wire.h>
 #include "routineManager.hpp"
 #include "utils.hpp"
+#include <TaskScheduler.h>
+#include <Wire.h>
 
-static Scheduler ts;
+static Scheduler *ts;
 static bool offCycle;
 
 static FlowManager* f;
 static Pump* p;
 static Event* head;
 
-//HardwareSerial modbusSerial(1);
-//HardwareSerial tSerial(2);
 extern YAAJ_ModbusMaster controller;
 
 /*
@@ -28,139 +26,83 @@ RoutineManager::RoutineManager() {
 /* 
  * Calls init with the provided Scheduler object and test flag.
  */
-RoutineManager::RoutineManager(Scheduler taskScheduler, bool test) {
+RoutineManager::RoutineManager(Scheduler* taskScheduler, bool test) {
     init(taskScheduler, test);
 }
 
 /*
  * Set the private pointers to the provided FlowManager and Pump objects, and run the test routine if requested.
  */
-void RoutineManager::init(Scheduler taskScheduler, bool test) {
-    //modbusSerial = HardwareSerial(1);
-    //tSerial = HardwareSerial(2);
-
-    // tSerial.begin(9600, SERIAL_8N1, T_RX, T_TX); // sniff all messages sent on RS485 bus
-    // //modbusSerial.begin(9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX);
-    // controller.begin(modbusSerial, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MAX485_ENABLE, 500); // 500ms timeout
+void RoutineManager::init(Scheduler* taskScheduler, bool test) {
     Wire.begin();
-    // while (!Serial || !tSerial || !modbusSerial) {} // wait until connections are ready
-
-    // // Start in receive mode for the sniffer MAX485, enable pin for the main sender is set by controller
-    // //pinMode(T_WRITE_ENABLE, OUTPUT);
-    // //digitalWrite(T_WRITE_ENABLE, LOW);
+    Serial.println("Completed setup, enabling RS485 communication.");
     
+    // Wait until the command to enable RS485 communication is received
+    while (controller.F5_WriteSingleCoil(0x1004, 0xFF) != 0) {
+        Serial.println("Unable to establish RS485 communication!");
+        delay(300);
+    }
+
+    Serial.println("Initializing pump and flow manager objects.");
     p = new Pump(controller);
     f = new FlowManager(p);
     ts = taskScheduler;
 
-    // Serial.println("Completed setup, enabling RS485 communication.");
-    // modbusSerial.println("test");
-    // bool connected = false;
-    // char* data = (char*) malloc(8 * sizeof(char));
-
-    // unsigned long start = -3000;
-
-    // while (!connected) {
-    //     // Print anything sent
-    //     if (millis() - start < 1000) {
-    //         // Read all data on the RS485 bus
-    //         if (tSerial.available()) {
-    //             tSerial.readBytes(data, 8);
-    //             Serial.printf("Address: %X Function: %X Coil: %X %X Value: %X %X CRC: %X %X\n", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-    //         }
-    //     }
-    //     else {
-    //         // Send the command to enable RS485 communication
-    //         uint16_t result = controller.F5_WriteSingleCoil(0x1004, 0xFF);
-    //         if (result != 0) {
-    //             Serial.printf("Unable to establish RS485 communication with device %x! Error code: %d\n", controller.getSlaveAddr(), result);
-    //             controller.setSlaveAddr((controller.getSlaveAddr() + 1) % 256);
-    //         }
-    //         else {
-    //             connected = true;
-    //         }
-
-    //         start = millis();
-    //     }
-    // }
-
-    // Serial.printf("Final address: %X\n", controller.getSlaveAddr());
-
-    // /*//p->setPump(true);
-    // // 41F0 = 30ml/min
-    // // 43C7 = 398ml/min
-    // // 258 = 438B = transition 2->1
-    // // 127.5 = 4309 = transition from 1->.5
-    // // 63.2 = 4287 = transition from .5->.25
-    // p->setSpeed(0, 0x43C7);
-    // delay(3000);
-    // while (true) {
-    //     int32_t speed = p->getSpeed(true);
-    //     if (speed < 0) {
-    //         Serial.println("Unable to read flow rate setting.");
-    //     }
-    //     //p->togglePump();
-    //     p->setSpeed(0, speed -= 10);
-    //     delay(2000);
-    // }*/
-
-    // /*if (test) {
-    //     Event* head = buildTestRoutine();
-    //     run(head);
-    //     deleteRoutine(head);
-    // }*/
-
-    // Testing for flow sensor data
-    unsigned long start;
-
-    for (int i = 0; i < 1000; i++) {
-        start = millis();
-        Serial.printf("Average flow rate: %.5fml/min, measured in %dms\n", f->takeAvgNumReadings(true, 1000), millis() - start);
-        /*controller.F5_WriteSingleCoil(0x1001, 0x00);
-        controller.F5_WriteSingleCoil(0x1003, 0x00);
-        controller.F5_WriteSingleCoil(0x1001, 0xFF);
-        delay(2000);*/
+    // Run the test routine if requested
+    if (test) {
+        Event* head = buildTestRoutine();
+        run(head);
+        deleteRoutine(head);
     }
 }
 
-void RoutineManager::hardware(HardwareSerial tSerial1) {
-    controller.begin(tSerial1, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MODBUS_ENABLE, 500);
+/*
+ * Collects 2000 flow rate readings and prints them to the serial monitor, with an update on the average rate and sample period every 1000.
+ */
+void RoutineManager::collectFlowRates() {
+    unsigned long start;
+
+    for (int i = 0; i < 2; i++) {
+        start = millis();
+        Serial.printf("Average flow rate: %.5fml/min, measured in %dms\n", f->takeAvgNumReadings(true, 1000), millis() - start);
+    }
 }
 
-void RoutineManager::testControl(HardwareSerial tSerial1, HardwareSerial tSerial2) {
-    tSerial2.begin(9600, SERIAL_8N1, T_RX, T_TX); // sniffer
-
-    while (!Serial || !tSerial1) {} // wait until connections are ready
-
-    pinMode(MODBUS_ENABLE, OUTPUT);
-    pinMode(T_WRITE_ENABLE, OUTPUT);
-
-    // Start in receive mode
-    digitalWrite(MODBUS_ENABLE, LOW);
-    digitalWrite(T_WRITE_ENABLE, LOW);
-
-    Serial.println("Completed setup, enabling RS485 communication.");
-
-    unsigned long start = -10000;
-    char* response = (char*) malloc(8 * sizeof(char));
-
-    while(true) {
-        // Wait 2s between sending commands in case the pump responds
-        if (millis() - start < 2000) {
-            // Print anything seen by the second board
-            if (tSerial2.available()) {
-            tSerial2.readBytes(response, 8);
-            Serial.printf("Took %dms to receive command. Address: %X Function: %X Coil: %X %X Value: %X %X CRC: %X %X\n", millis() - start, response[0], response[1], response[2], response[3], response[4], response[5], response[6], response[7]);
+/*
+ * Tests a range of pump speed settings to help determine the conversion to ml/min.
+ */
+void RoutineManager::testControl(HardwareSerial SnifferSerial) {
+    // Wait until the command to enable RS485 communication is received
+    uint8_t resp = controller.F5_WriteSingleCoil(0x1004, 0xFF);
+    char* buf = (char*) malloc(8 * sizeof(char));
+    while (resp != 0) {
+        Serial.printf("Unable to establish RS485 communication! Error: %d\n", resp);
+        unsigned long time = millis();
+        while (millis() - time < 2000) {
+            if (SnifferSerial.available()) {
+                SnifferSerial.readBytes(buf, 8);
+                Serial.printf("Read %x\n", buf);
             }
+            delay(200);
         }
-        else {
-            // Send the command to enable RS485 communication
-            Serial.printf("Sending enable command to address: %d\n", controller.getSlaveAddr());
-            start = millis();
-            if (controller.F5_WriteSingleCoil(0x1004, 0xFF) == 0) {
-                return;
-            }
+        delay(300);
+        resp = controller.F5_WriteSingleCoil(0x1004, 0xFF);
+    }
+
+    //p->setPump(true);
+    // 41F0 = 30ml/min
+    // 43C7 = 398ml/min
+    // 258 = 438B = transition 2->1
+    // 127.5 = 4309 = transition from 1->.5
+    // 63.2 = 4287 = transition from .5->.25
+    p->setSpeed(0, 0x43C7);
+    delay(3000);
+    while (true) {
+        int32_t speed = p->getSpeed(true);
+        if (speed < 0) {
+            Serial.println("Unable to read flow rate setting.");
         }
+        delay(2000);
     }
 }
 
@@ -231,12 +173,12 @@ void RoutineManager::run() {
     else {
         p->setPump(true); // make sure the pump is on in all other cases
         // Try to achieve this flow rate with the flowManager, with a timeout set
-        Task t2(TASK_IMMEDIATE, TASK_ONCE, &setFlow, &ts, true);
+        Task t2(TASK_IMMEDIATE, TASK_ONCE, &setFlow, ts, true);
         // Schedule the next task for after the requested duration for this flow rate
         t1.delay(head->getDuration());
     }
 
-    ts.addTask(t1);
+    ts->addTask(t1);
     t1.enableDelayed();
 }
 

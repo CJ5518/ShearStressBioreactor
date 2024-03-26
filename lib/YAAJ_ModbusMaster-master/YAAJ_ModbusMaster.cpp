@@ -101,6 +101,8 @@ void YAAJ_ModbusMaster::begin(HardwareSerial& serial, uint32_t baud, SerialConfi
 	slaveAddr = _slaveAddr;
 	baudRate = baud;
 
+	pinMode(txEnablePin, OUTPUT);
+	digitalWrite(txEnablePin, LOW);
 	pSerial->begin(baudRate, config, rxPin, txPin);
 
 	// calculate inter character timeout and frame delay (silent interval)
@@ -114,9 +116,6 @@ void YAAJ_ModbusMaster::begin(HardwareSerial& serial, uint32_t baud, SerialConfi
 		T1_5 = 16500000 / baudRate; // 1 packet = 11 bits
 		T3_5 = 38500000 / baudRate; // 1 packet = 11 bits
 	}
-
-	pinMode(txEnablePin, OUTPUT_OPEN_DRAIN);
-	digitalWrite(txEnablePin, LOW);
 }
 
 uint16_t YAAJ_ModbusMaster::getRxBuf(uint8_t index)
