@@ -18,7 +18,7 @@ class RoutineManager {
         void deleteRoutine(Event* head);
 
         void collectFlowRates();
-        void testControl(HardwareSerial SnifferSerial);
+        void testControl();
 
         // Callback functions
         static void run();

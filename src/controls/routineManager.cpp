@@ -71,38 +71,22 @@ void RoutineManager::collectFlowRates() {
 /*
  * Tests a range of pump speed settings to help determine the conversion to ml/min.
  */
-void RoutineManager::testControl(HardwareSerial SnifferSerial) {
-    // Wait until the command to enable RS485 communication is received
-    uint8_t resp = controller.F5_WriteSingleCoil(0x1004, 0xFF);
-    char* buf = (char*) malloc(8 * sizeof(char));
-    while (resp != 0) {
-        Serial.printf("Unable to establish RS485 communication! Error: %d\n", resp);
-        unsigned long time = millis();
-        while (millis() - time < 2000) {
-            if (SnifferSerial.available()) {
-                SnifferSerial.readBytes(buf, 8);
-                Serial.printf("Read %x\n", buf);
-            }
-            delay(200);
-        }
-        delay(300);
-        resp = controller.F5_WriteSingleCoil(0x1004, 0xFF);
-    }
-
+void RoutineManager::testControl() {
     //p->setPump(true);
     // 41F0 = 30ml/min
     // 43C7 = 398ml/min
     // 258 = 438B = transition 2->1
     // 127.5 = 4309 = transition from 1->.5
     // 63.2 = 4287 = transition from .5->.25
-    p->setSpeed(0, 0x43C7);
+    p->setSpeed(0, 0x437F);
     delay(3000);
     while (true) {
         int32_t speed = p->getSpeed(true);
         if (speed < 0) {
             Serial.println("Unable to read flow rate setting.");
         }
-        delay(2000);
+        p->setSpeed(0, speed + 1);
+        delay(3000);
     }
 }
 

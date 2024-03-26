@@ -3,7 +3,6 @@
 
 // Used for sending and receiving Modbus commands
 HardwareSerial ModbusSerial(1);
-//HardwareSerial SnifferSerial(2);
 
 // Receive and transmit pins for the MAX485
 const int MODBUS_RX = 16;
@@ -23,8 +22,7 @@ void setup() {
 
     // RoutineManager initialization
     rm.init(&ts, false);
-    //SnifferSerial.begin(9600, SERIAL_8N1, 21, 19);
-    //rm.testControl(SnifferSerial); // pump control testing
+    rm.testControl(); // pump control testing
     //rm.collectFlowRates(); // testing for flow sensor data
 
     // Init GUI, passing in RoutineManager instance pointer
