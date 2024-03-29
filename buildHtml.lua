@@ -48,10 +48,10 @@ for i, v in ipairs(list) do
 	local content = file:read("*a");
 	file:close();
 	--Remove whitespace
-	content = content:gsub("\n", "");
-	content = content:gsub("\t", "");
 	content = content:gsub("\\", "\\\\")
 	content = content:gsub("\"", "\\\"");
+	content = content:gsub("\n", "\\n");
+	content = content:gsub("\t", "\\t");
 	--const char index_html[] PROGMEM = "....";
 	
 	local filename, extension = v:match("(%w+)%.(%w+)");
