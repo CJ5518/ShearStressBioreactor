@@ -34,7 +34,7 @@ RoutineManager::RoutineManager(Scheduler* taskScheduler, bool test) {
  * Set the private pointers to the provided FlowManager and Pump objects, and run the test routine if requested.
  */
 void RoutineManager::init(Scheduler* taskScheduler, bool test) {
-    Wire.begin();
+    Wire.begin(); // sda 21, scl 22 by default
     Serial.println("Completed setup, enabling RS485 communication.");
     
     // Wait until the command to enable RS485 communication is received
@@ -45,7 +45,7 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
 
     Serial.println("Initializing pump and flow manager objects.");
     p = new Pump(controller);
-    //f = new FlowManager(p);
+    f = new FlowManager(p);
     ts = taskScheduler;
 
     // Run the test routine if requested
@@ -83,6 +83,13 @@ void RoutineManager::testControl() {
         }
         delay(100);
     }
+}
+
+/*
+ * Manually sets the pump state to the provided value (true = on).
+ */
+void RoutineManager::setPump(bool on) {
+    p->setPump(on);
 }
 
 /*

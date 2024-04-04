@@ -13,14 +13,16 @@ class RoutineManager {
         RoutineManager(Scheduler* taskScheduler, bool test);
 
         void init(Scheduler* ts, bool test);
-        Event* buildTestRoutine();
         void run(Event* head);
         void deleteRoutine(Event* head);
 
         void collectFlowRates();
         void testControl();
+        void setPump(bool on);
 
         // Callback functions
         static void run();
         static void setFlow();
+    private:
+        Event* buildTestRoutine();
 };
