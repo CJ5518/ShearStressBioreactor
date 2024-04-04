@@ -8,12 +8,16 @@
 #include <TaskScheduler.h>
 #include <Wire.h>
 
+// TODO: move global static vars to private class members
 static Scheduler *ts;
 static bool offCycle;
 
 static FlowManager* f;
 static Pump* p;
 static Event* head;
+
+static Task t1; // recurring call to run() that modifies t2
+static Task* t2; // runs a callback to set the flow rate once
 
 extern YAAJ_ModbusMaster controller;
 
@@ -47,6 +51,7 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
     p = new Pump(controller);
     f = new FlowManager(p);
     ts = taskScheduler;
+    t2 = new Task(TASK_IMMEDIATE, TASK_ONCE, &setFlow, ts, true);
 
     // Run the test routine if requested
     if (test) {
@@ -127,7 +132,7 @@ void RoutineManager::run(Event* newHead) {
 
 /*
  * Recursively schedules the events contained in the linked list starting with static member head.
-*/
+ */
 void RoutineManager::run() {
     // Decrement the number of repetitions left, and check if it was 0
     if (head->decRepetitions() == 0) {
@@ -135,13 +140,12 @@ void RoutineManager::run() {
 
         if (head == NULL) {
             Serial.println("Routine execution has finished.");
+            ts->disableAll();
             return;
         }
     }
 
-    // TODO: ensure task initialization happens in a global scope
-    Task t1; // initialize the next task
-    t1.setCallback(&run);
+    t1.setCallback(&run); // prepare a future recursive call to run
 
     // If an offDuration has been set for this Event, and the last call did not turn off the pump, set the static flag for the next call to run()
     if (head->getOffDuration() > 0 && !offCycle) {
@@ -159,7 +163,7 @@ void RoutineManager::run() {
     else {
         p->setPump(true); // make sure the pump is on in all other cases
         // Try to achieve this flow rate with the flowManager, with a timeout set
-        Task t2(TASK_IMMEDIATE, TASK_ONCE, &setFlow, ts, true);
+        t2->setTimeout(head->getDuration() - 10);
         // Schedule the next task for after the requested duration for this flow rate
         t1.delay(head->getDuration());
     }

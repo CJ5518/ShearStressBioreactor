@@ -17,13 +17,14 @@ GUI gui;
 
 void setup() {
     Serial.begin(115200); // for USB debugging
-    //controller.begin(ModbusSerial, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MODBUS_ENABLE, 500);
-    //while (!Serial || !ModbusSerial) {} // wait until connections are ready
+    // Serial connection for sending RS485 commands
+    controller.begin(ModbusSerial, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MODBUS_ENABLE, 500);
+    while (!Serial || !ModbusSerial) {} // wait until connections are ready
 
     // RoutineManager initialization
-    //rm.init(&ts, false);
+    rm.init(&ts, false);
     //rm.testControl(); // pump control testing
-    //rm.collectFlowRates(); // testing for flow sensor data
+    rm.collectFlowRates(); // testing for flow sensor data
 
     // Init GUI, passing in RoutineManager instance pointer
     gui.init(&ts, &rm);
