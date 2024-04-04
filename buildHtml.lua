@@ -42,6 +42,16 @@ local list = getListOfFiles();
 
 local stringList = {};
 
+--Lua has no continue statement and I didn't want to add more indentation to my code
+--so here's a quick hack to remove the file we don't want
+--A more robust solution that can remove multiple files would need recursion or an outer loop
+for i,v in ipairs(list) do
+	if v:lower() == "readme.md" then
+		table.remove(list, i);
+		break;
+	end
+end
+
 for i, v in ipairs(list) do
 	--Read file content
 	local file = io.open("data/" .. v, "r");

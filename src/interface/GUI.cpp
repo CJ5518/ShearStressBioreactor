@@ -21,6 +21,8 @@ IPAddress apIP = IPAddress(192,168,4,42);
 
 RoutineManager* GUI::routineManager;
 AsyncWebServer* GUI::server = 0;
+static int errorCode;
+static String errorMessage;
 Task* GUI::wifi_connect_task;
 Task* GUI::wifi_watchdog_task;
 // Wi-Fi events
@@ -44,47 +46,89 @@ On user disconnect (1 event)
 */
 
 
+String errorMessageProcessor(const String& var) {
+    if (var == "CODE") {
+        return String(errorCode);
+    } else if (var == "MESSAGE") {
+        return errorMessage;
+    }
+    return String();
+}
+
+void GUI::sendErrorMessage(AsyncWebServerRequest* request, int code, const String &message) {
+    errorCode = code;
+    errorMessage = message;
+    request->send_P(code, "text/html", error_html, errorMessageProcessor);
+}
+
+void GUI::initServer(AsyncWebServer* server) {
+
+    server->on("/networkSettingsRouterConnection", HTTP_POST, [](AsyncWebServerRequest *request) {
+        //HTML forms are apparently terrible and don't include checkboxes unless they are checked
+        //The check box is NOT checked
+        if (request->params() == 2) {
+
+        } else if (request->params() == 3) {
+            //Check box IS checked
+
+        } else {
+            //If we get some other number, then something is seriously wrong
+            sendErrorMessage(request, 500, "Internal server error, too many params at line " + String(__LINE__));
+        }
+    });
+
+    //Auto generated section, serves files in data/
+    server->on("/chart.js", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/javascript", chart_js);
+    });
+    server->on("/error.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", error_html);
+    });
+    server->on("/graphs.js", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/javascript", graphs_js);
+    });
+    server->on("/graphViewer.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", graphViewer_html);
+    });
+    server->on("/", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", index_html);
+    });
+    server->on("/networkSettings.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", networkSettings_html);
+    });
+    server->on("/routineManager.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", routineManager_html);
+    });
+    server->on("/styles.css", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/css", styles_css);
+    });
+    server->on("/success.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", success_html);
+    });
+
+
+    //Begin the server
+    server->begin();
+    Serial.printf("Started server\n");
+}
 
 
 void GUI::onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
-  Serial.printf("Got event %d - %s\n", event, WiFi.eventName(event));
-  switch (event) {
-    case 10: {
-        Serial.printf("AP Started\n");
-        WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+    Serial.printf("Got event %d - %s\n", event, WiFi.eventName(event));
+    switch (event) {
+        case 10: {
+            Serial.printf("AP Started\n");
+            WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
 
-        delay(800);
+            delay(800);
 
-        WiFi.softAP(ssid, password);
-        if (!server) {
-            server = new AsyncWebServer(80);
-
-            server->on("/chart.js", HTTP_ANY, [](AsyncWebServerRequest *request) {
-                request->send_P(200, "text/javascript", chart_js);
-            });
-            server->on("/graphs.js", HTTP_ANY, [](AsyncWebServerRequest *request) {
-                request->send_P(200, "text/javascript", graphs_js);
-            });
-            server->on("/graphViewer.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
-                request->send_P(200, "text/html", graphViewer_html);
-            });
-            server->on("/", HTTP_ANY, [](AsyncWebServerRequest *request) {
-                request->send_P(200, "text/html", index_html);
-            });
-            server->on("/routineManager.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
-                request->send_P(200, "text/html", routineManager_html);
-            });
-            server->on("/styles.css", HTTP_ANY, [](AsyncWebServerRequest *request) {
-                request->send_P(200, "text/css", styles_css);
-            });
-
-            server->begin();
-            Serial.printf("Started server\n");
-        }
-
-    } break;
-    
-  }
+            WiFi.softAP(ssid, password);
+            if (!server) {
+                server = new AsyncWebServer(80);
+                initServer(server);
+            }
+        } break; 
+    }
 }
 
 // Wi-Fi connect task

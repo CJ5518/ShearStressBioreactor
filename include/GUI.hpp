@@ -26,6 +26,12 @@ public:
     //Pointer to internal web server
     static AsyncWebServer* server;
 
+    //Variables used for error messages
+    static void sendErrorMessage(AsyncWebServerRequest* request, int code, const String &message);
+
+    //Initializes the server
+    static void initServer(AsyncWebServer* server);
+
     //Tasks
     static Task* wifi_connect_task;
     static Task* wifi_watchdog_task;
