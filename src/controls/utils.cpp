@@ -2,15 +2,22 @@
 #include <Arduino.h>
 
 /*
- * Returns the flow rate in ml/min required to cause the requested shear stress in mPa.
+ * Calculates the flow rate in ml/min required to achieve the provided shear stress in Pa.
  */
-float Utils::shearToFlow(float shear) {
-    return 0.0f; // TODO: talk to BEs about adapting the excel calc sheet
+double Utils::flowRate(double tau) {
+    return ((Utils::CHANNEL_WIDTH * Utils::CHANNEL_HEIGHT * Utils::CHANNEL_HEIGHT * tau) / (6 * Utils::MU)) * 6e7;
 }
 
 /*
- * Returns the shear stress in mPa resulting from the provided flow rate in ml/min.
+ * Calculates the shear stress in Pa that will result from the provided flow rate in ml/min.
  */
-float Utils::flowToShear(float flow) {
-    return 0.0f;
+double Utils::shearStress(double q) {
+    return (q / 6e7) * (6 * Utils::MU) / (Utils::CHANNEL_WIDTH * Utils::CHANNEL_HEIGHT * Utils::CHANNEL_HEIGHT);
+}
+
+/*
+ * Calculates the Reynolds number for the given flow rate.
+ */
+double Utils::reynolds(double q) {
+    return (Utils::RHO * (q / (Utils::CHANNEL_HEIGHT * Utils::CHANNEL_WIDTH)) * Utils::CHANNEL_HEIGHT) / Utils::MU;
 }
