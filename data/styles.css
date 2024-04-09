@@ -1,7 +1,7 @@
 
 .center {
 	margin: auto;
-	width: 90%;
+	width: 96%;
 	padding: 10px;
 	text-align: center;
 }
@@ -18,16 +18,16 @@ ul.no-bullets {
 }
 
 .routineManagerInput {
-	width: 18%;
-	font-size: 22px;
+	width: 17%;
+	font-size: 20px;
 }
 .routineManagerInputSmaller {
 	width: 10%;
-	font-size: 22px;
+	font-size: 20px;
 }
 
 .routineManagerEntry {
-	width: 95%;
+	width: 98%;
 	margin: auto;
 	border: 2px;
 	max-width: 800px;

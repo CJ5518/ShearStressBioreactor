@@ -4,6 +4,8 @@
 #include "WiFi.h"
 #include "html.hpp"
 
+#include "Preferences.h"
+
 //https://web.archive.org/web/20240213064921/https://gist.githubusercontent.com/evert-arias/
 //d0abf2769802e56c88793a4447fe9f7e/raw/b1f582f8cdcaa07f84072ede8687bdbe9045e75a/esp32-wifi-auto-connect.cpp
 
@@ -18,6 +20,7 @@ IPAddress apIP = IPAddress(192,168,4,42);
 #define WIFI_CONNECT_INTERVAL 5000   // Connection retry interval in milliseconds
 #define WIFI_WATCHDOG_INTERVAL 5000  // Wi-Fi watchdog interval in milliseconds
 
+Preferences guiPreferences;
 
 RoutineManager* GUI::routineManager;
 AsyncWebServer* GUI::server = 0;
@@ -55,26 +58,35 @@ String errorMessageProcessor(const String& var) {
     return String();
 }
 
-void GUI::sendErrorMessage(AsyncWebServerRequest* request, int code, const String &message) {
+void sendErrorMessage(AsyncWebServerRequest* request, int code, const String &message) {
     errorCode = code;
     errorMessage = message;
     request->send_P(code, "text/html", error_html, errorMessageProcessor);
 }
 
-void GUI::initServer(AsyncWebServer* server) {
+void sendSuccessMessage(AsyncWebServerRequest* request) {
+    request->send_P(200, "text/html", success_html);
+}
+
+void initServer(AsyncWebServer* server) {
 
     server->on("/networkSettingsRouterConnection", HTTP_POST, [](AsyncWebServerRequest *request) {
         //HTML forms are apparently terrible and don't include checkboxes unless they are checked
         //The check box is NOT checked
         if (request->params() == 2) {
-
+            guiPreferences.putBool("routerConnect", false);
         } else if (request->params() == 3) {
             //Check box IS checked
-
+            guiPreferences.putBool("routerConnect", true);
         } else {
             //If we get some other number, then something is seriously wrong
             sendErrorMessage(request, 500, "Internal server error, too many params at line " + String(__LINE__));
+            return;
         }
+
+        //Save other preferences
+        guiPreferences.putString("ssid", request->getParam("ssid", true, false)->value());
+        guiPreferences.putString("password", request->getParam("password", true, false)->value());
     });
 
     //Auto generated section, serves files in data/
@@ -117,7 +129,7 @@ void GUI::onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
     Serial.printf("Got event %d - %s\n", event, WiFi.eventName(event));
     switch (event) {
         case 10: {
-            Serial.printf("AP Started\n");
+            Serial.printf("AP Starting\n");
             WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
 
             delay(800);
@@ -132,13 +144,19 @@ void GUI::onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
 }
 
 // Wi-Fi connect task
- void GUI::wifi_connect_cb() {
+void GUI::wifi_connect_cb() {
     // Disable this task to avoid further iterations
     wifi_connect_task->disable();
 
     // Connect to Wi-Fi network
-    bool ret = WiFi.enableAP(true);
-    ret = WiFi.softAP(ssid, password);
+    if (guiPreferences.getBool("routerConnect")) {
+        Serial.printf("Trying to connect to router");
+        WiFi.begin(guiPreferences.getString("ssid"), guiPreferences.getString("password"));
+    } else {
+        Serial.printf("Making access point");
+        bool ret = WiFi.enableAP(true);
+        ret = WiFi.softAP(ssid, password);
+    }
 
     wifi_watchdog_task->enable();
 }
@@ -146,6 +164,7 @@ void GUI::onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
 //Wi-Fi watchdog task
 //Mostly used for other wifi modes
 void GUI::wifi_watchdog_cb() {
+    //Serial.printf("Status: %d, conn: %d\n", WiFi.status(), WL_CONNECTED);
 }
 
 void GUI::init(Scheduler* ts, RoutineManager* rm) {
@@ -167,6 +186,14 @@ void GUI::init(Scheduler* ts, RoutineManager* rm) {
     //Which is why the tasks are static
     wifi_connect_task = &wifiConnectTask;
     wifi_watchdog_task = &wifiWatchdogTask;
+
+    //If NONE of the preferences have been set
+    if (!guiPreferences.isKey("ssid")) {
+        //Go ahead and make them all
+        guiPreferences.putString("ssid", "NONE");
+        guiPreferences.putString("password", "NONE");
+        guiPreferences.putBool("routerConnect", false);
+    }
 }
 
 void GUI::end() {
