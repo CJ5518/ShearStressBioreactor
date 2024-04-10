@@ -9,29 +9,27 @@
 		<link rel="stylesheet" href="styles.css">
 	</head>
 	<body>
-		<h1 class="center">
+		<script src="./common.js"></script>
+			<h1 class="center">
 			Status: No Routine
 		</h1>
 		<div class="center">
-			<ul class="no-bullets">
-				<div class="routineManagerEntry">
-					<input class="routineManagerInputSmaller" type="text" placeholder="idx">
-					<input class="routineManagerInput" type="text" placeholder="flow">
-					<input class="routineManagerInput" type="text" placeholder="time">
-					<input class="routineManagerInput" type="text" placeholder="time2">
-					<input class="routineManagerInput" type="text" placeholder="cycles">
-				</div>
-				<div class="routineManagerEntry">
-					<input class="routineManagerInputSmaller" type="text" placeholder="idx">
-					<input class="routineManagerInput" type="text" placeholder="flow">
-					<input class="routineManagerInput" type="text" placeholder="time">
-					<input class="routineManagerInput" type="text" placeholder="time2">
-					<input class="routineManagerInput" type="text" placeholder="cycles">
+			<ul class="no-bullets" id="entries">
+				<div class="routineManagerEntry" id="entry0">
+					<input class="routineManagerInput" type="number" placeholder="flow">
+					<input class="routineManagerInput" type="number" placeholder="timeOn">
+					<input class="routineManagerInput" type="number" placeholder="timeOff">
+					<input class="routineManagerInput" type="number" placeholder="cycles">
 				</div>
 			</ul>
-			<button class="mainButton">
+			<button class="mainButton" onclick="makeNewEntry()">
 				Add Entry
 			</button>
+			<script src="./routineManager.js"></script>
+			<p>
+				Flow rates in ml/min<br>
+				Times are in milliseconds
+			</p>
 		</div>
 	</body>
 </html>
