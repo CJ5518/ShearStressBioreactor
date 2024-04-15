@@ -9,27 +9,47 @@
 		<link rel="stylesheet" href="styles.css">
 	</head>
 	<body>
+		<div class="center">
+			<a href="./index.html">Go Home</a>
+		</div>
 		<script src="./common.js"></script>
 			<h1 class="center">
 			Status: No Routine
 		</h1>
 		<div class="center">
 			<ul class="no-bullets" id="entries">
+				<div class="routineManagerEntry" id="first">
+					<input class="routineManagerInput" type="number" disabled placeholder="flow">
+					<input class="routineManagerInput" type="number" disabled placeholder="timeOn">
+					<input class="routineManagerInput" type="number" disabled placeholder="timeOff">
+					<input class="routineManagerInput" type="number" disabled placeholder="cycles">
+				</div>
 				<div class="routineManagerEntry" id="entry0">
 					<input class="routineManagerInput" type="number" placeholder="flow">
 					<input class="routineManagerInput" type="number" placeholder="timeOn">
 					<input class="routineManagerInput" type="number" placeholder="timeOff">
 					<input class="routineManagerInput" type="number" placeholder="cycles">
 				</div>
+
 			</ul>
 			<button class="mainButton" onclick="makeNewEntry()">
 				Add Entry
 			</button>
-			<script src="./routineManager.js"></script>
+			<p></p>
+			<button class="mainButton" onclick="removeEntry()">
+				Remove Entry
+			</button>
 			<p>
 				Flow rates in ml/min<br>
 				Times are in milliseconds
 			</p>
+			<button class="mainButton" onclick="executeRoutine()">
+				Execute Routine
+			</button>
+			<p id="routineTime">
+				Total routine time: 0 seconds
+			</p>
+			<script src="./routineManager.js"></script>
 		</div>
 	</body>
 </html>

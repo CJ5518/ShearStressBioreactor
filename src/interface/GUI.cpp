@@ -83,11 +83,11 @@ void initServer(AsyncWebServer* server) {
             sendErrorMessage(request, 500, "Internal server error, too many params at line " + String(__LINE__));
             return;
         }
-
         //Save other preferences
         guiPreferences.putString("ssid", request->getParam("ssid", true, false)->value());
         guiPreferences.putString("password", request->getParam("password", true, false)->value());
     });
+
 
     //Auto generated section, serves files in data/
     server->on("/chart.js", HTTP_ANY, [](AsyncWebServerRequest *request) {

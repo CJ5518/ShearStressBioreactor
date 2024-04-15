@@ -34,6 +34,15 @@ ul.no-bullets {
 	margin-bottom: 10px;
 }
 
+.helpP {
+	max-width: 800px;
+	margin: auto;
+	width: 96%;
+	padding: 10px;
+	text-align: justify;
+	text-indent: 3ch;
+}
+
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
