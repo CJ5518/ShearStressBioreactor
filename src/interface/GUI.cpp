@@ -23,6 +23,7 @@ IPAddress apIP = IPAddress(192,168,4,42);
 Preferences guiPreferences;
 
 RoutineManager* GUI::routineManager;
+Scheduler* GUI::taskScheduler;
 AsyncWebServer* GUI::server = 0;
 static int errorCode;
 static String errorMessage;
@@ -68,8 +69,38 @@ void sendSuccessMessage(AsyncWebServerRequest* request) {
     request->send_P(200, "text/html", success_html);
 }
 
-void initServer(AsyncWebServer* server) {
+void GUI::initServer(AsyncWebServer* server) {
 
+
+    //Routine manager
+    server->on("/executeRoutine", HTTP_POST, [](AsyncWebServerRequest* request) {
+        Event* head = 0;
+        for (int q = 0; q < request->getParam("numEntries", true)->value().toInt(); q++) {
+            String base = ("entry" + String(q));
+            Event* newEvent = new Event(
+                request->getParam(base + "0", true)->value().toFloat(),
+                request->getParam(base + "1", true)->value().toInt(),
+                request->getParam(base + "3", true)->value().toInt(),
+                request->getParam(base + "2", true)->value().toInt()
+            );
+            Serial.printf("Event %d: Flow: %f, timeOn: %d, timeOff: %d, cycles: %d\n", q,
+                newEvent->getFlow(),
+                newEvent->getDuration(),
+                newEvent->getOffDuration(),
+                newEvent->getRepetitions()
+            );
+            if (head == 0) {
+                head = newEvent;
+            } else {
+                head->append(newEvent);
+            }
+        }
+
+        routineManager->run(head);
+    });
+
+
+    //Network settings
     server->on("/networkSettingsRouterConnection", HTTP_POST, [](AsyncWebServerRequest *request) {
         //HTML forms are apparently terrible and don't include checkboxes unless they are checked
         //The check box is NOT checked
@@ -93,6 +124,9 @@ void initServer(AsyncWebServer* server) {
     server->on("/chart.js", HTTP_ANY, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/javascript", chart_js);
     });
+    server->on("/common.js", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/javascript", common_js);
+    });
     server->on("/error.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", error_html);
     });
@@ -102,6 +136,9 @@ void initServer(AsyncWebServer* server) {
     server->on("/graphViewer.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", graphViewer_html);
     });
+    server->on("/help.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/html", help_html);
+    });
     server->on("/", HTTP_ANY, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", index_html);
     });
@@ -110,6 +147,9 @@ void initServer(AsyncWebServer* server) {
     });
     server->on("/routineManager.html", HTTP_ANY, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/html", routineManager_html);
+    });
+    server->on("/routineManager.js", HTTP_ANY, [](AsyncWebServerRequest *request) {
+        request->send_P(200, "text/javascript", routineManager_js);
     });
     server->on("/styles.css", HTTP_ANY, [](AsyncWebServerRequest *request) {
         request->send_P(200, "text/css", styles_css);
@@ -146,7 +186,7 @@ void GUI::onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
 // Wi-Fi connect task
 void GUI::wifi_connect_cb() {
     // Disable this task to avoid further iterations
-    wifi_connect_task->disable();
+    taskScheduler->getCurrentTask()->disable();
 
     // Connect to Wi-Fi network
     if (guiPreferences.getBool("routerConnect")) {
@@ -176,6 +216,8 @@ void GUI::init(Scheduler* ts, RoutineManager* rm) {
     
     ts->addTask(wifiConnectTask);
     ts->addTask(wifiWatchdogTask);
+
+    taskScheduler = ts;
 
     // Wi-Fi events listener
     WiFi.onEvent(onWifiEvent);

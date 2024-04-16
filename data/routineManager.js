@@ -67,11 +67,16 @@ addEventListener('input', function (evt) {
 
 function executeRoutine() {
 	var numbers = getAllNumbers();
-	var data = {};
-	data["numEntries"] = numbers.length;
+	var data = "";
+	data += "numEntries=" + numbers.length;
 	for (var q = 0; q < numbers.length; q++) {
+		data += "&";
 		for (var i = 0; i < numbers[q].length; i++) {
-			data[("entry" + q) + i] = numbers[q][i];
+			data += ("entry" + q) + i;
+			data += "=" + numbers[q][i];
+			if (i < numbers[q].length-1) {
+				data += "&";
+			}
 		}
 	}
 
@@ -85,6 +90,8 @@ function executeRoutine() {
 		}
 	};
 
-	xhr.open('POST', yourUrl, true);
-	xhr.send(JSON.stringify(data));
+	xhr.open('POST', "./executeRoutine", true);
+	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+	console.log(data);
+	xhr.send(data);
 }

@@ -25,6 +25,7 @@ public:
     static RoutineManager* routineManager;
     //Pointer to internal web server
     static AsyncWebServer* server;
+    static Scheduler* taskScheduler;
 
     //Tasks
     static Task* wifi_connect_task;
@@ -34,4 +35,5 @@ public:
     static void wifi_watchdog_cb();
 
     static void onWifiEvent(arduino_event_id_t event, arduino_event_info_t info);
+    static void initServer(AsyncWebServer* server);
 };
