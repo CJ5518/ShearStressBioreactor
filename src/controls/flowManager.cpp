@@ -14,7 +14,7 @@ FlowManager::FlowManager(Pump* p) {
 void FlowManager::init() {
     // Low flow sensor is connected as device 0
     // High flow sensor is connected as device 1
-    tca.init(0, 1);
+    tca.init(LOW_ADDRESS, HIGH_ADDRESS);
 
     /*pid.begin();
     pid.tune(0.1, 0.5, 0.3); // kP, kI, kD
@@ -26,9 +26,9 @@ void FlowManager::init() {
     highMotor.init(27, 26, 25);
 
     // Create flow sensor objects and send initial reset commands
-    tca.tcaSelect(0);
+    tca.tcaSelect(tca.getLowSensorAddr());
     lowFS.initSensor();
-    tca.tcaSelect(1);
+    tca.tcaSelect(tca.getHighSensorAddr());
     highFS.initSensor();
 }
 
@@ -91,7 +91,7 @@ void FlowManager::setFlow(float targetFlow) {
         avg10Readings = 0;
         
         // average 10 flow readings then assign to current flow rate
-        avg10Readings = takeAvgNumReadings(lowFlowSys, 10);
+        avg10Readings = takeAvgNumReadings(lowFlowSys, 10, false);
         
         Serial.print("Flow Rate: ");
         Serial.print(avg10Readings);
@@ -143,12 +143,14 @@ void FlowManager::setFlow(float targetFlow) {
 /*
  * Reads from the specified flow sensor the requested number of times, and returns the average value.
  */
-float FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
+float FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings, bool print) {
     float avg = 0.0;
     float reading;
 
     // Select the requested sensor and set the liquid to water which starts reading
     tca.readSensor(lowFlow); // select requested sensor address
+    // Adding any delay here results in occasional measurement mode errors from
+    // the high flow sensor, only on the second time through the loop.
     
     // Loop the requested number of times
     for (int i = 0; i < numReadings; i++) {
@@ -158,16 +160,23 @@ float FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
         else {
             highFS.setLiquid(true);
         }
-        delay(12); // minimum reliable delay between selecting the sensor and reading from it
+        delay(12); // minimum reliable delay between setting the fluid and reading
 
         if (lowFlow) {
             reading = lowFS.scaleReadings(lowFS.readSensor());
         }
         else {
             reading = highFS.scaleReadings(highFS.readSensor());
+            ets_delay_us(100); // high flow sensor requires more delay for consistency
         }
 
-        Serial.println(reading);
+        if (print) {
+            Serial.println(reading); // sufficient delay at 115200 baud
+        }
+        else {
+            ets_delay_us(250); // some delay is requred between reading and setting the liquid
+        }
+
         avg += reading;
     }
 
@@ -178,7 +187,7 @@ float FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings) {
  * Closes the open valve until the measured flow is 0.
  */
 void FlowManager::closeFlow(bool lowFlow) {
-    float flowAvg = takeAvgNumReadings(lowFlow, 10);
+    float flowAvg = takeAvgNumReadings(lowFlow, 10, false);
 
     // There must be a bypass line in order to close the valve while the pump is on!
     while(flowAvg > 0.0) {
@@ -195,7 +204,7 @@ void FlowManager::closeFlow(bool lowFlow) {
         }
 
         delay(200); // TODO: test for new pump and replace with scheduled call
-        flowAvg = takeAvgNumReadings(lowFlow, 10);
+        flowAvg = takeAvgNumReadings(lowFlow, 10, false);
     }
 
     Serial.print(lowFlow ? "Low" : "High");

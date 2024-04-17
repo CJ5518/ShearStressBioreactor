@@ -9,6 +9,9 @@
 
 class FlowManager {
     private:
+        const int LOW_ADDRESS = 0;
+        const int HIGH_ADDRESS = 1;
+
         // Flow rate limits
         const float MIN_LOW_FLOW_RATE = 0.0;
         const float MAX_LOW_FLOW_RATE = 27.09;
@@ -42,6 +45,6 @@ class FlowManager {
         FlowManager(Pump* p);
         void setFlow(float tgtFlowRate);
         void closeFlow(bool lowFlow);
-        float takeAvgNumReadings(bool lowFlow, int numReadings);
+        float takeAvgNumReadings(bool lowFlow, int numReadings, bool print);
 };
 

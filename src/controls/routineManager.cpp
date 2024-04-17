@@ -39,6 +39,7 @@ RoutineManager::RoutineManager(Scheduler* taskScheduler, bool test) {
  */
 void RoutineManager::init(Scheduler* taskScheduler, bool test) {
     Wire.begin(); // sda 21, scl 22 by default
+
     Serial.println("Completed setup, enabling RS485 communication.");
     
     // Wait until the command to enable RS485 communication is received
@@ -66,11 +67,25 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
  */
 void RoutineManager::collectFlowRates() {
     unsigned long start;
+    
+    p->setSpeed(50);
+    p->setPump(true);
+    Serial.println("Priming system...");
+    delay(1000);
 
-    for (int i = 0; i < 2; i++) {
+    //int speeds[10] = {10, 30, 15, 25, 20, 10, 30, 15, 25, 20}; //{40, 80, 120, 160, 80, 40, 80, 120, 160, 80};
+    //int speeds[5] = {100, 150, 200, 150, 100};
+
+    for (int i = 1; i < 12; i++) {
         start = millis();
-        Serial.printf("Average flow rate: %.5fml/min, measured in %dms\n", f->takeAvgNumReadings(true, 1000), millis() - start);
+        int speed = (2 * i) + 8;
+        p->setSpeed(speed);
+        Serial.printf("Pump set to %d ml/min\n", speed);
+        //delay(100);
+        Serial.printf("Average flow rate: %.5f ml/min, measured in %d ms\n", f->takeAvgNumReadings(speed <= 40, 500, true), millis() - start);
     }
+
+    p->setPump(false);
 }
 
 /*

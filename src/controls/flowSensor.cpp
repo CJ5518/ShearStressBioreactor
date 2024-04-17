@@ -24,7 +24,7 @@ int FlowSensor::setLiquid(bool isWater) {
 
     ret = startReading(isWater);
     if (ret != 0) {
-        Serial.printf("Error while sending measurement mode command to the %s.\n", name());
+        Serial.printf("Error %d while sending measurement mode command to the %s.\n", ret, name());
     }
 
     return ret;
@@ -81,13 +81,13 @@ int FlowSensor::resetSensor() {
 
         if (ret != 0) {
             // Stop trying after about 5 seconds of no response
-            if (failures > 20) {
+            if (failures > 50) {
                 return ret;
             }
 
             Serial.printf("Error %d while sending reset command to the %s.\n", ret, name());
             failures++;
-            delay(250); // wait long enough for chip reset to complete
+            delay(100); // wait long enough for chip reset to complete
         }
     }
     
