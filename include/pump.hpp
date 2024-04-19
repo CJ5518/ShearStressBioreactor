@@ -6,10 +6,11 @@ class Pump {
     public:
         Pump(YAAJ_ModbusMaster controller);
 
+        bool checkStatus();
         bool setPump(bool option);
         bool togglePump();
-        bool setSpeed(uint16_t high, uint16_t low);
-        bool setSpeed(int flow);
+        bool setSpeed(uint16_t high, uint16_t low, bool start = false);
+        bool setSpeed(int flow, bool force = false);
         bool isPumpOn();
         int32_t getSpeed(bool print);
     private:
