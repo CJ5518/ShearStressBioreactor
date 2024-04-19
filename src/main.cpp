@@ -24,7 +24,7 @@ void setup() {
     // RoutineManager initialization
     rm.init(&ts, false);
     //rm.testControl(); // pump control testing
-    rm.collectFlowRates(); // testing for flow sensor data
+    //rm.collectFlowRates(); // testing for flow sensor data
 
     // Init GUI, passing in RoutineManager instance pointer
     gui.init(&ts, &rm);

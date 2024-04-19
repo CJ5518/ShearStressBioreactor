@@ -44,9 +44,7 @@ void FlowManager::setFlow(float targetFlow) {
     int motorTicks;
 
     // Print target
-    Serial.print("Target flow rate: ");
-    Serial.print(targetFlow);
-    Serial.println();
+    Serial.printf("Target flow rate: %.2f\n", targetFlow);
 
     // Use the high flow valve and sensor for all flow rates over 30 ml/min
     if (targetFlow > 30.0) {
@@ -64,22 +62,6 @@ void FlowManager::setFlow(float targetFlow) {
         lowFlowSys = true;
         // Error rate for low flow sensor is 5%
         difference = targetFlow * 0.05;
-    }
-
-    // Close the old valve and change the pump speed when switching between the two systems (low->high or high->low)
-    if (targetFlow == 0 || lastSys != lowFlowSys) {
-        closeFlow(lastSys);
-        Serial.println("Setting flow rate to 0.");
-        stepsTaken = 0;
-
-        // TODO: consider setting the flow rate more precisely to avoid turbulence when clamping to flow rates at the lower limit of each system
-        // If we are changing from a high flow rate to a low flow rate, set the pump speed to the max low flow rate
-        if (lowFlowSys) {
-            pump->setSpeed(MAX_LOW_FLOW_RATE);
-        }
-        else {
-            pump->setSpeed(MAX_HIGH_FLOW_RATE); // set the pump speed to the max high flow rate
-        }
     }
 
     // Save the valve that was adjusted last
