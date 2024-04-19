@@ -10,13 +10,13 @@
 
 // TODO: move global static vars to private class members
 static Scheduler *ts;
-static bool offCycle;
+static bool offCycle = false;
 
 static FlowManager* f;
 static Pump* p;
 static Event* head;
 
-static Task t1; // recurring call to run() that modifies t2
+static Task* t1; // recurring call to run() that modifies t2
 static Task* t2; // runs a callback to set the flow rate once
 
 extern YAAJ_ModbusMaster controller;
@@ -50,9 +50,12 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
 
     Serial.println("Initializing pump and flow manager objects.");
     p = new Pump(controller);
+
     f = new FlowManager(p);
     ts = taskScheduler;
-    t2 = new Task(TASK_IMMEDIATE, TASK_ONCE, &setFlow, ts, true);
+    // Define the tasks to be reused for each routine step
+    t1 = new Task(TASK_IMMEDIATE, TASK_ONCE, &run, ts, false); // call run()
+    t2 = new Task(TASK_IMMEDIATE, TASK_ONCE, &setFlow, ts, false); // set specific flow rate
 
     // Run the test routine if requested
     if (test) {
@@ -68,7 +71,7 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
 void RoutineManager::collectFlowRates() {
     unsigned long start;
     
-    p->setSpeed(50);
+    p->setSpeed(10);
     p->setPump(true);
     Serial.println("Priming system...");
     delay(1000);
@@ -76,9 +79,9 @@ void RoutineManager::collectFlowRates() {
     //int speeds[10] = {10, 30, 15, 25, 20, 10, 30, 15, 25, 20}; //{40, 80, 120, 160, 80, 40, 80, 120, 160, 80};
     //int speeds[5] = {100, 150, 200, 150, 100};
 
-    for (int i = 1; i < 12; i++) {
+    for (int i = 0; i < 20; i++) {
         start = millis();
-        int speed = (2 * i) + 8;
+        int speed = (10 * i) + 10;
         p->setSpeed(speed);
         Serial.printf("Pump set to %d ml/min\n", speed);
         //delay(100);
@@ -142,25 +145,50 @@ Event* RoutineManager::buildTestRoutine() {
  */
 void RoutineManager::run(Event* newHead) {
     head = newHead;
-    run();
+    t1->setIterations(1);
+
+    // Make sure the pump starts off
+    if (p->checkStatus()) {
+        p->setPump(false);
+        t1->enableDelayed(2000); // allow the flow to stop
+    }
+    else {
+        t1->enable();
+    }
 }
 
 /*
  * Recursively schedules the events contained in the linked list starting with static member head.
+ * This function is for use only as a task callback; routines must be started with a call to run(Event*).
  */
 void RoutineManager::run() {
     // Decrement the number of repetitions left, and check if it was 0
     if (head->decRepetitions() == 0) {
         head = head->getNext(); // move to the next event
+        offCycle = false; // reset in case next event is a cycle
 
         if (head == NULL) {
             Serial.println("Routine execution has finished.");
-            ts->disableAll();
+            p->setPump(false);
+            t1->disable();
             return;
         }
     }
 
-    t1.setCallback(&run); // prepare a future recursive call to run
+    Serial.printf("Running event: flow rate: %.2f, duration: %d, \
+        off duration: %d, cycles left: %d\n", head->getFlow(), 
+        head->getDuration(), head->getOffDuration(), head->getRepetitions());
+
+    // When a flow rate of 0 is requested, or this is an odd repetition in a cycle with specified offDuration, turn off the pump
+    if (head->getFlow() == 0 || offCycle) {
+        p->setPump(false);
+    }
+    else {
+        // Try to achieve this flow rate with the flowManager, with a timeout set
+        t2->setTimeout(head->getDuration() - 1);
+        t2->setIterations(1);
+        t2->enable(); // will execute setFlow as soon as run() returns
+    }
 
     // If an offDuration has been set for this Event, and the last call did not turn off the pump, set the static flag for the next call to run()
     if (head->getOffDuration() > 0 && !offCycle) {
@@ -170,28 +198,23 @@ void RoutineManager::run() {
         offCycle = false; // if this event has no offDuration, or the last call turned off the pump, turn it on this time
     }
 
-    // When a flow rate of 0 is requested, or this is an odd repetition in a cycle with specified offDuration, turn off the pump
-    if (head->getFlow() == 0 || offCycle) {
-        p->setPump(false);
-        t1.delay(head->getOffDuration());
-    }
-    else {
-        p->setPump(true); // make sure the pump is on in all other cases
-        // Try to achieve this flow rate with the flowManager, with a timeout set
-        t2->setTimeout(head->getDuration() - 10);
-        // Schedule the next task for after the requested duration for this flow rate
-        t1.delay(head->getDuration());
-    }
-
-    ts->addTask(t1);
-    t1.enableDelayed();
+    t1->setIterations(1);
+    // Schedule the next task for after the requested duration for this flow rate
+    t1->enableDelayed(head->getDuration());
 }
 
 /*
  * Callback-friendly function that calls FlowManager::setFlow with the head event's flow rate.
  */
 void RoutineManager::setFlow() {
-    f->setFlow(head->getFlow());
+    if (head != NULL) {
+        //f->setFlow(head->getFlow());
+        p->setSpeed(head->getFlow());
+        p->setPump(true);
+    }
+    else {
+        Serial.println("Error: setFlow() called with no Event object in routine list.");
+    }
 }
 
 /*
