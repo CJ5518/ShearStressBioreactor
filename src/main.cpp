@@ -17,8 +17,7 @@ Scheduler ts;
 GUI gui;
 ThingSpeak tsp;
 
-const unsigned long postingInterval = 15000; // Interval at which to post (in milliseconds)
-unsigned long lastConnectionTime = 0; // Last time data was posted to ThingSpeak
+
 
 void setup() {
     Serial.begin(115200); // for USB debugging

@@ -24,13 +24,17 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WiFiServer.h>
-#include <ThingSpeak.h>
+//#include <ThingSpeak.h>
 #include "thingSpeak.hpp"
 
 //const char *ssid = "AirVandalGuest";       // Replace with your WiFi SSID
 //const char *password = "GoVandals!";       // Replace with your WiFi password
-const char *host = "api.thingspeak.com";    // ThingSpeak API endpoint
 
+const int LED_BUILTIN = 2;
+
+const char *host = "api.thingspeak.com";    // ThingSpeak API endpoint
+const unsigned long postingInterval = 15000; // Interval at which to post (in milliseconds)
+unsigned long lastConnectionTime = 0; // Last time data was posted to ThingSpeak
 WiFiClient client;
 
 // Default constructor
@@ -229,7 +233,7 @@ void ThingSpeak::getWifiAndLed()
 
         // Not connected to WiFi, attempt to reconnect
         Serial.println("WiFi not connected, attempting to reconnect...");
-        WiFi.begin(ssid, password);
+        //WiFi.begin(ssid, password);
     }
     
     delay(15000); // Send to ThingSpeak every 15 seconds
