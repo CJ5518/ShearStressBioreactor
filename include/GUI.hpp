@@ -27,13 +27,6 @@ public:
     static AsyncWebServer* server;
     static Scheduler* taskScheduler;
 
-    //Tasks
-    static Task* wifi_connect_task;
-    static Task* wifi_watchdog_task;
-    //Task callbacks
-    static void wifi_connect_cb();
-    static void wifi_watchdog_cb();
-
     static void onWifiEvent(arduino_event_id_t event, arduino_event_info_t info);
     static void initServer(AsyncWebServer* server);
 };

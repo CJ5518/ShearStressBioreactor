@@ -73,16 +73,19 @@ for i, v in ipairs(list) do
 --server->on("/", HTTP_ANY, [](AsyncWebServerRequest *request){
 --request->send_P(200, "text/html", index_html);
 --});
-	if filename == "index" then
-		print('server->on("/", HTTP_ANY, [](AsyncWebServerRequest *request) {');
-	else
-		print('server->on("/' .. v .. '", HTTP_ANY, [](AsyncWebServerRequest *request) {');
-	end
+	print('server->on("/' .. v .. '", HTTP_ANY, [](AsyncWebServerRequest *request) {');
 	local extensionMIME = extension;
 	if extension == "js" then extensionMIME = "javascript" end
 	print(string.format('    request->send_P(200, "text/%s", %s_%s);', extensionMIME, filename, extension));
 	print('});');
 end
+
+--Print an extra entry to redirect to index
+print(
+[[server->on("/", HTTP_ANY, [](AsyncWebServerRequest *request) {
+	request->redirect("/index.html");
+});]]
+)
 
 local finalString = filePattern:format(table.concat(stringList, "\n"));
 
