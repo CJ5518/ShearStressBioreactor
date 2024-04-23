@@ -33,10 +33,36 @@ const char *host = "api.thingspeak.com";    // ThingSpeak API endpoint
 
 WiFiClient client;
 
-ThingSpeak::init()
+// Default constructor
+ThingSpeak::ThingSpeak(){}
+
+void ThingSpeak::init()
+{
+    /*
+        ThingSpeak section
+        For University of Idaho, to bypass daily re-authentication on VandalGuest network, remember to register
+        the ESP32's MAC address with UI system at help.uidaho.edu/avsetup
+        (optional) Print ESP32 IP address and MAC address:
+            Serial.print("IP Address: "); Serial.println(WiFi.localIP());
+            Serial.print("MAC Address: "); Serial.println(WiFi.macAddress());
+    
+        // Assuming Wi-Fi credentials are already assigned in ssid and password (either directly in code or through GUI)
+        Serial.print("Connecting to "); Serial.println(ssid);
+        WiFi.begin(ssid, password);
+        while (WiFi.status() != WL_CONNECTED)
+        {
+            delay(500);
+            Serial.print(".");
+        }
+        Serial.println("");
+        Serial.println("WiFi connected");
+    
+    */
+    pinMode(LED_BUILTIN, OUTPUT); // Built-in blue LED on the ESP32 (using this to confirm system ON/OFF)
+}
 
 // Send Wi-Fi signal strength data to ThingSpeak (update field 1)
-void sendToThingSpeak_field1(int32_t rssi)
+void ThingSpeak::sendToThingSpeak_field1(int32_t rssi)
 {
     Serial.println("Sending data to ThingSpeak...");
 
@@ -53,7 +79,7 @@ void sendToThingSpeak_field1(int32_t rssi)
 }
 
 // Send LED status to ThingSpeak (update field 2)
-void sendToThingSpeak_field2(int ledStatus)
+void ThingSpeak::sendToThingSpeak_field2(int ledStatus)
 {
     Serial.println("Sending data to ThingSpeak...");
 
@@ -71,7 +97,7 @@ void sendToThingSpeak_field2(int ledStatus)
 
 
 // Send Actual Flow Rate status to ThingSpeak (update field 3)
-void sendToThingSpeak_field3(double actualFlow)
+void ThingSpeak::sendToThingSpeak_field3(double actualFlow)
 {
     Serial.println("Sending data to ThingSpeak...");
 
@@ -88,7 +114,7 @@ void sendToThingSpeak_field3(double actualFlow)
 }
 
 // Send Target Flow Rate status to ThingSpeak (update field 4)
-void sendToThingSpeak_field4(double targetFlow)
+void ThingSpeak::sendToThingSpeak_field4(double targetFlow)
 {
     Serial.println("Sending data to ThingSpeak...");
 
@@ -105,7 +131,7 @@ void sendToThingSpeak_field4(double targetFlow)
 }
 
 // Send Pump Flow Rate status to ThingSpeak (update field 5)
-void sendToThingSpeak_field5(double pumpFlow)
+void ThingSpeak::sendToThingSpeak_field5(double pumpFlow)
 {
     Serial.println("Sending data to ThingSpeak...");
 
@@ -122,7 +148,7 @@ void sendToThingSpeak_field5(double pumpFlow)
 }
 
 // Send Estimated Shear status to ThingSpeak (update field 6)
-void sendToThingSpeak_field6(double shearStress)
+void ThingSpeak::sendToThingSpeak_field6(double shearStress)
 {
     Serial.println("Sending data to ThingSpeak...");
 
@@ -139,7 +165,7 @@ void sendToThingSpeak_field6(double shearStress)
 }
 
 // Send Runtime status to ThingSpeak (update field 7)
-void sendToThingSpeak_field7(long runTime)
+void ThingSpeak::sendToThingSpeak_field7(long runTime)
 {
     Serial.println("Sending data to ThingSpeak...");
 
@@ -156,7 +182,7 @@ void sendToThingSpeak_field7(long runTime)
 }
 
 // Send Calculated Reynold's number status to ThingSpeak (update field 8)
-void sendToThingSpeak_field8(double calculatedR)
+void ThingSpeak::sendToThingSpeak_field8(double calculatedR)
 {
     Serial.println("Sending data to ThingSpeak...");
 
@@ -170,4 +196,49 @@ void sendToThingSpeak_field8(double calculatedR)
     }
     else
     { Serial.println("Connection to ThingSpeak failed"); }
+}
+
+void ThingSpeak::getWifiAndLed()
+{
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        // Measure WiFi signal strength and print
+        int32_t rssi = WiFi.RSSI();
+        Serial.print("Signal strength (RSSI): ");
+        Serial.println(rssi);
+
+        // LED turn on when Wi-Fi connected, update LED status on ThingSpeak as well
+        digitalWrite(LED_BUILTIN, HIGH);
+        int ledStatus = 1;
+        sendToThingSpeak_field2(ledStatus);
+
+        // Check if it's time to send a new measurement to ThingSpeak
+        unsigned long currentTime = millis();
+        if (currentTime - lastConnectionTime >= postingInterval)
+        {
+            // Send the data to ThingSpeak
+            sendToThingSpeak_field1(rssi);
+        }
+    } 
+    else 
+    {
+        // LED turn off when Wi-Fi is not connected, update LED status on ThingSpeak as well
+        digitalWrite(LED_BUILTIN, LOW);
+        int ledStatus = 0;
+        sendToThingSpeak_field2(ledStatus);
+
+        // Not connected to WiFi, attempt to reconnect
+        Serial.println("WiFi not connected, attempting to reconnect...");
+        WiFi.begin(ssid, password);
+    }
+    
+    delay(15000); // Send to ThingSpeak every 15 seconds
+
+}
+
+void ThingSpeak::getSystemRuntime()
+{
+    unsigned long runTime = millis();
+    sendToThingSpeak_field7(runTime);   
+    delay(15000); // Send to ThingSpeak every 15 seconds
 }

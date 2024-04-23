@@ -6,6 +6,8 @@
 class ThingSpeak
 {
     public:
+        void init();
+
         // Send Wi-Fi signal strength data to ThingSpeak (update field 1)
         void sendToThingSpeak_field1(int32_t rssi);
 
@@ -29,4 +31,10 @@ class ThingSpeak
 
         // Send Calculated Reynold's number status to ThingSpeak (update field 8)
         void sendToThingSpeak_field8(double calculatedR);
+
+        // Collect Wi-Fi signal strength and change LED on ESP32 depends on connection
+        void getWifiAndLed();
+
+        // Collect the Runtime of the system
+        void getSystemRuntime();
 };
