@@ -13,6 +13,8 @@
 static Scheduler *ts;
 static bool offCycle = false;
 
+bool RoutineManager::running;
+
 static FlowManager* f;
 static Pump* p;
 static Event* head;
@@ -230,7 +232,7 @@ void RoutineManager::setFlow() {
         tsp.sendToThingSpeak_field5(rate);
         double actual = f->takeAvgNumReadings(rate < 40, 50, true);
         tsp.sendToThingSpeak_field3(actual);
-        Serial.printf("Shear stress: %.2f\n", Utils::shearStress(actual));
+        //Serial.printf("Shear stress: %.2f\n", Utils::shearStress(actual));
     }
     else {
         Serial.println("Error: setFlow() called with no Event object in routine list.");
