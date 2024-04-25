@@ -6,6 +6,8 @@
 class ThingSpeak
 {
     public:
+        // Declare the constructor
+        ThingSpeak();
         void init();
 
         // Send Wi-Fi signal strength data to ThingSpeak (update field 1)
