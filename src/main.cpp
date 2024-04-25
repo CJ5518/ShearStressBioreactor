@@ -23,11 +23,8 @@ void setup() {
     controller.begin(ModbusSerial, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MODBUS_ENABLE, 500);
     while (!Serial || !ModbusSerial) {} // wait until connections are ready
 
-    //Init scheduler
-    ts.init();
-
     // RoutineManager initialization
-    rm.init(&ts, false);
+    rm.init(&ts, false); // calls ts.init()
     //rm.testControl(); // pump control testing
     //rm.collectFlowRates(); // testing for flow sensor data
 

@@ -1,4 +1,4 @@
-#define _TASK_TIMECRITICAL      // measure delay between scheduled time and actual start time
+//#define _TASK_TIMECRITICAL      // measure delay between scheduled time and actual start time
 //#define _TASK_STATUS_REQUEST    // use status requests to delay tasks until another has completed
 //#define _TASK_WDT_IDS           // for displaying control points and task IDs for debugging
 #define _TASK_TIMEOUT           // a timeout can be set for when tasks should be deactivated
@@ -57,6 +57,7 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
 
     f = new FlowManager(p);
     ts = taskScheduler;
+    ts->init();
     // Define the tasks to be reused for each routine step
     t1 = new Task(TASK_IMMEDIATE, TASK_ONCE, &run, ts, false); // call run()
     t2 = new Task(TASK_IMMEDIATE, TASK_ONCE, &setFlow, ts, false); // set specific flow rate
