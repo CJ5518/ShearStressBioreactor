@@ -5,6 +5,7 @@
 
 #include "routineManager.hpp"
 #include "utils.hpp"
+#include "thingSpeak.hpp"
 #include <TaskScheduler.h>
 #include <Wire.h>
 
@@ -20,6 +21,7 @@ static Task* t1; // recurring call to run() that modifies t2
 static Task* t2; // runs a callback to set the flow rate once
 
 extern YAAJ_ModbusMaster controller;
+extern ThingSpeak tsp;
 
 /*
  * Default constructor is currently undefined. A Scheduler object should be provided via init().
@@ -45,7 +47,7 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
     // Wait until the command to enable RS485 communication is received
     while (controller.F5_WriteSingleCoil(0x1004, 0xFF) != 0) {
         Serial.println("Unable to establish RS485 communication!");
-        delay(300);
+        delay(500);
     }
 
     Serial.println("Initializing pump and flow manager objects.");
@@ -56,6 +58,7 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
     // Define the tasks to be reused for each routine step
     t1 = new Task(TASK_IMMEDIATE, TASK_ONCE, &run, ts, false); // call run()
     t2 = new Task(TASK_IMMEDIATE, TASK_ONCE, &setFlow, ts, false); // set specific flow rate
+    running = false;
 
     // Run the test routine if requested
     if (test) {
@@ -141,9 +144,18 @@ Event* RoutineManager::buildTestRoutine() {
 }
 
 /*
+ * Returns true if a routine is currently being run.
+ */
+bool RoutineManager::isRunning() {
+    return running;
+}
+
+/*
  * Saves the provided linked list of events, and calls the run() function to begin scheduing of events.
  */
 void RoutineManager::run(Event* newHead) {
+    running = true;
+
     head = newHead;
     t1->setIterations(1);
 
@@ -169,6 +181,7 @@ void RoutineManager::run() {
 
         if (head == NULL) {
             Serial.println("Routine execution has finished.");
+            running = false;
             p->setPump(false);
             t1->disable();
             return;
@@ -209,8 +222,15 @@ void RoutineManager::run() {
 void RoutineManager::setFlow() {
     if (head != NULL) {
         //f->setFlow(head->getFlow());
-        p->setSpeed(head->getFlow());
+        int rate = (int) head->getFlow();
+        p->setSpeed(rate);
         p->setPump(true);
+        
+        tsp.sendToThingSpeak_field4(rate);
+        tsp.sendToThingSpeak_field5(rate);
+        double actual = f->takeAvgNumReadings(rate < 40, 50, true);
+        tsp.sendToThingSpeak_field3(actual);
+        Serial.printf("Shear stress: %.2f\n", Utils::shearStress(actual));
     }
     else {
         Serial.println("Error: setFlow() called with no Event object in routine list.");

@@ -20,9 +20,12 @@ class RoutineManager {
         void testControl();
         void setPump(bool on);
 
+        bool isRunning();
+
         // Callback functions
         static void run();
         static void setFlow();
     private:
         Event* buildTestRoutine();
+        static bool running;
 };
