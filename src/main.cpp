@@ -17,8 +17,6 @@ Scheduler ts;
 GUI gui;
 ThingSpeak tsp;
 
-
-
 void setup() {
     Serial.begin(115200); // for USB debugging
     // Serial connection for sending RS485 commands
@@ -34,7 +32,6 @@ void setup() {
     //rm.collectFlowRates(); // testing for flow sensor data
 
     // Init GUI, passing in RoutineManager instance pointer
-    ts.init();
     gui.init(&ts, &rm);
 
     // ThingSpeak

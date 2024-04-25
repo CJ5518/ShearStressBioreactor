@@ -6,6 +6,7 @@
 
 #include "Preferences.h"
 
+//This code adapted from:
 //https://web.archive.org/web/20240213064921/https://gist.githubusercontent.com/evert-arias/
 //d0abf2769802e56c88793a4447fe9f7e/raw/b1f582f8cdcaa07f84072ede8687bdbe9045e75a/esp32-wifi-auto-connect.cpp
 
@@ -13,31 +14,35 @@
 const char* ssid     = "ESP32 Bioreactor";
 const char* password = "password1234";
 
+//The access point IP Address
 IPAddress apIP = IPAddress(192,168,4,42);
 
+//Task intervals
 #define WIFI_CONNECT_INTERVAL 5000   // Connection retry interval in milliseconds
-#define WIFI_WATCHDOG_INTERVAL 3000  // Wi-Fi watchdog interval in milliseconds
+#define WIFI_WATCHDOG_INTERVAL 5000  // Wi-Fi watchdog interval in milliseconds
 
+//Static class members
 RoutineManager* GUI::routineManager;
 Scheduler* GUI::taskScheduler;
 AsyncWebServer* GUI::server = 0;
+
+//Global Variables
 static int errorCode;
 static String errorMessage;
 static String successMessage;
-
 static bool routerConnect = false;
 static String ssidSTA = "";
 static String passwordSTA = "";
 
-// Callback methods prototypes
+//Callback method prototypes
 void wifi_connect_cb();
 void wifi_watchdog_cb();
 
-// Tasks
+//Tasks
 Task wifi_connect_task(WIFI_CONNECT_INTERVAL, TASK_FOREVER, &wifi_connect_cb);
 Task wifi_watchdog_task(WIFI_WATCHDOG_INTERVAL, TASK_FOREVER, &wifi_watchdog_cb);
 
-
+//Handle error/success messages
 String errorMessageProcessor(const String& var) {
     if (var == "CODE") {
         return String(errorCode);
@@ -65,9 +70,8 @@ void sendSuccessMessage(AsyncWebServerRequest* request, const String& message) {
     request->send_P(200, "text/html", success_html, successMessageProcessor);
 }
 
+//Adds server routes
 void GUI::initServer(AsyncWebServer* server) {
-
-
     //Routine manager
     server->on("/executeRoutine", HTTP_POST, [](AsyncWebServerRequest* request) {
         Event* head = 0;
@@ -106,15 +110,11 @@ void GUI::initServer(AsyncWebServer* server) {
             //Check box IS checked
             Serial.println("Setting routerConnect to true!");
             routerConnect = true;
+            wifi_connect_task.enable();
         } else {
             //If we get some other number, then something is seriously wrong
             sendErrorMessage(request, 500, "Internal server error, too many params at line " + String(__LINE__));
             return;
-        }
-
-        for (int q = 0; q < request->params(); q++) {
-            Serial.printf("%d: '%s'='%s'\n", q, request->getParam(q)->name(), request->getParam(q)->value());
-            Serial.printf("%d: '%s'='%s'\n", q, request->getParam(q)->name().c_str(), request->getParam(q)->value().c_str());
         }
 
         //Save other preferences
@@ -136,9 +136,11 @@ void GUI::initServer(AsyncWebServer* server) {
             sendErrorMessage(request, 500, "Internal server error, too many params at line " + String(__LINE__));
             return;
         }
-        //Save other preferences
     });
 
+    server->on("/isRoutineRunning", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain", routineManager->isRunning() ? "yes" : "no");
+    });
 
     //Auto generated section, serves files in data/
     server->on("/common.js", HTTP_ANY, [](AsyncWebServerRequest *request) {
@@ -254,6 +256,7 @@ void wifi_watchdog_cb() {
     Serial.printf("Status: %d, conn: %d\n", WiFi.status(), WL_CONNECTED);
 }
 
+//Initialize things in setup()
 void GUI::init(Scheduler* ts, RoutineManager* rm) {
     routineManager = rm;
     Serial.printf("In GUI init\n");
@@ -272,6 +275,7 @@ void GUI::init(Scheduler* ts, RoutineManager* rm) {
     //Which is why the tasks are static
 }
 
+//Clean up
 void GUI::end() {
     delete server;
 }

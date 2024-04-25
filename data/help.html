@@ -32,13 +32,20 @@
 			<h2>Routine Manager</h2>
 			<p class="helpP">
 				The routine manager is used to create and execute 'routines', which are comprised of a desired flow rate, some amount of time to be on, some amount of time
-				to be off, and a number of the cycles of on/off to do.
+				to be off, and a number of the cycles of on/off to do. The units of each field are described in the routine manager itself. 
+				A short time after clicking 'execute routine' you should see the pump being to operate as requested. If the ESP is connected to the internet you can access graphs via ThingSpeak, which is linked on the home page as 'Graph Viewer.'
 			</p>
 			<a name="NetworkSettings"></a>
+			<h2>Network Settings</h2>
 			<p class="helpP">
 				The network settings menu allows users to connect to WiFi networks, or turn on Access Point mode. Currently, only WiFi networks that
 				require only ssid and password are available to be connected to. Many University networks require a username as well, but many also
 				block devices from hosting web servers on the local network.
+			</p>
+			<p class="helpP">
+				On reboot, the ESP will always start in access point mode. While in access point mode the ESP cannot send data to ThingSpeak.
+				To send data, use the network settings page to connect the ESP to a wifi network. You can do this after setting up a routine and running it, or you can choose to only
+				use the access point mode to connect to a network, then connect to the ESP from a machine connected to that network. 
 			</p>
 		</div>
 	</body>

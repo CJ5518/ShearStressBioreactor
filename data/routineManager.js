@@ -1,11 +1,15 @@
+//Routine Manager code
+//Drive the routine manager GUI
 
-console.log("hello, world!");
 
+//Collect various document elements
 var firstEntry = document.getElementsByClassName("routineManagerEntry")[1];
 var entryList = document.getElementById("entries");
 var timeText = document.getElementById("routineTime");
+var statusHeader = document.getElementById("statusHeader");
 var numEntries = 1;
 
+//Create a new entry, a group of 4 fields
 function makeNewEntry() {
 	var clone = firstEntry.cloneNode(true);
 	clone.id = "entry" + numEntries;
@@ -14,12 +18,14 @@ function makeNewEntry() {
 	numEntries++;
 }
 
+//Remove the most recently added entry
 function removeEntry() {
 	if (numEntries == 1) return;
 	document.getElementById("entry" + (numEntries - 1)).remove();
 	numEntries--;
 }
 
+//Internal use, gets the numbers of an entry
 function getNumbers(entryNum) {
 	var ret = [];
 	for (var q = 0; q < 4; q++) {
@@ -28,6 +34,7 @@ function getNumbers(entryNum) {
 	return ret;
 }
 
+//Internal use, gets the numbers of all the entries
 function getAllNumbers() {
 	var ret = [];
 	for (var q = 0; q < numEntries; q++) {
@@ -36,6 +43,7 @@ function getAllNumbers() {
 	return ret;
 }
 
+//Sets an entries fields to empty
 function setNumbers(entryNum) {
 	for (var q = 0; q < 4; q++) {
 		document.querySelectorAll("#entry" + entryNum + " input")[q].value = "";
@@ -65,6 +73,7 @@ addEventListener('input', function (evt) {
 	timeText.textContent = text;
 });
 
+//Sends the routine data to the server
 function executeRoutine() {
 	var numbers = getAllNumbers();
 	var data = "";
@@ -95,3 +104,25 @@ function executeRoutine() {
 	console.log(data);
 	xhr.send(data);
 }
+
+//Asks the server if a routine is running and updates the text accordingly
+function updateStatus() {
+	var xhr = new XMLHttpRequest();
+
+	xhr.onreadystatechange = function () {
+		if (this.readyState != 4) return;
+
+		if (this.status == 200) {
+			if (this.responseText == "yes") {
+				statusHeader.innerText = "Status: Running!";
+			} else {
+				statusHeader.innerText = "Status: No Routine";
+			}
+		}
+	};
+
+	xhr.open('GET', "./isRoutineRunning", true);
+	xhr.send();
+}
+
+setInterval(updateStatus, 1000);
