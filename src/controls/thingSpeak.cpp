@@ -38,7 +38,8 @@ unsigned long lastConnectionTime = 0; // Last time data was posted to ThingSpeak
 WiFiClient client;
 
 // Default constructor
-ThingSpeak::ThingSpeak(){}
+//When uncommented: definition of implicitly-declared 'constexpr ThingSpeak::ThingSpeak()'
+//ThingSpeak::ThingSpeak(){}
 
 void ThingSpeak::init()
 {
