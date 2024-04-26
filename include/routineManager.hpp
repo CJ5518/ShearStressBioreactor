@@ -14,7 +14,8 @@ class RoutineManager {
 
         void init(Scheduler* ts, bool test);
         void run(Event* head);
-        void deleteRoutine(Event* head);
+        static void deleteRoutine(Event* head);
+        static void sendData(int speed);
 
         void collectFlowRates();
         void testControl();

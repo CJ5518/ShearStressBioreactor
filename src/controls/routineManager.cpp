@@ -67,7 +67,6 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
     if (test) {
         Event* head = buildTestRoutine();
         run(head);
-        deleteRoutine(head);
     }
 }
 
@@ -126,22 +125,22 @@ void RoutineManager::setPump(bool on) {
  */
 Event* RoutineManager::buildTestRoutine() {
     // Spend 0.5 seconds at 5.5 ml/min, then 0.5 seconds off
-    Event* lowFlow1 = new Event(5.5f, 500, 1); // the complete constructor could be used also: Task(5.5f, 500, 1, 500)
-    Event* lowFlow2 = new Event(7.5f, 500, 1);
+    Event* lowFlow1 = new Event(5.5f, 15000, 10, 15000); // the complete constructor could be used also: Task(5.5f, 500, 1, 500)
+    Event* lowFlow2 = new Event(20.0f, 15000, 10, 15000);
     lowFlow1->setNext(lowFlow2);
-    Event* lowFlow3 = new Event(15.5f, 1000); // stay at 15.5 ml/min for 1 sec (no off cycle)
+    /*Event* lowFlow3 = new Event(15.5f, 15000); // stay at 15.5 ml/min for 1 sec (no off cycle)
     lowFlow2->setNext(lowFlow3);
-    Event* lowFlow4 = new Event(17.5f, 1000); // move to 17.5 ml/min for 1 sec
+    Event* lowFlow4 = new Event(17.5f, 15000, 3); // move to 17.5 ml/min for 1 sec
     lowFlow3->setNext(lowFlow4);
 
     // After the low flow rates are done, stay at 200ml/min for 10 sec
-    Event* highFlow1 = new Event(200.0f, 10000); // could be written as Task(200.0f, 12000, 1, 0)
+    Event* highFlow1 = new Event(20.0f, 30000); // could be written as Task(200.0f, 12000, 1, 0)
     lowFlow1->append(highFlow1); // append to the end of the list instead of setting next for lowFlow4
-    Event* highFlow2 = new Event(300.0f, 1000, 5, 2000); // move to 300 ml/min for 1 sec, then off for 2 sec, 5 times
+    Event* highFlow2 = new Event(30.0f, 15000, 5, 15000); // move to 300 ml/min for 1 sec, then off for 2 sec, 5 times
     lowFlow3->append(highFlow2); // append can be called for any task in the list, not just the first or last, but the length will appear shorter
-    Event* highFlow3 = new Event(400.0f, 1000, 1);
+    Event* highFlow3 = new Event(25.0f, 15000, 1);
     int count = lowFlow1->append(highFlow3); // append returns the new length of the list starting from lowFlow1
-    Serial.printf("Number of tasks in the list: %d\n", count);
+    Serial.printf("Number of tasks in the list: %d\n", count);*/
 
     return lowFlow1;
 }
@@ -157,6 +156,8 @@ bool RoutineManager::isRunning() {
  * Saves the provided linked list of events, and calls the run() function to begin scheduing of events.
  */
 void RoutineManager::run(Event* newHead) {
+    tsp.sendToThingSpeak_field7(0);
+    tsp.sendToThingSpeak_field7(1);
     running = true;
 
     head = newHead;
@@ -177,6 +178,8 @@ void RoutineManager::run(Event* newHead) {
  * This function is for use only as a task callback; routines must be started with a call to run(Event*).
  */
 void RoutineManager::run() {
+    //sendData(head->getFlow());
+
     // Decrement the number of repetitions left, and check if it was 0
     if (head->decRepetitions() == 0) {
         head = head->getNext(); // move to the next event
@@ -185,8 +188,11 @@ void RoutineManager::run() {
         if (head == NULL) {
             Serial.println("Routine execution has finished.");
             running = false;
+            tsp.sendToThingSpeak_field7(1);
+            tsp.sendToThingSpeak_field7(0);
             p->setPump(false);
             t1->disable();
+            deleteRoutine(head);
             return;
         }
     }
@@ -198,6 +204,7 @@ void RoutineManager::run() {
     // When a flow rate of 0 is requested, or this is an odd repetition in a cycle with specified offDuration, turn off the pump
     if (head->getFlow() == 0 || offCycle) {
         p->setPump(false);
+        tsp.sendToThingSpeak_field6(0); // 5 for pump speed
     }
     else {
         // Try to achieve this flow rate with the flowManager, with a timeout set
@@ -229,21 +236,33 @@ void RoutineManager::setFlow() {
         p->setSpeed(rate);
         p->setPump(true);
         
-        tsp.sendToThingSpeak_field4(rate);
-        tsp.sendToThingSpeak_field5(rate);
-        double actual = f->takeAvgNumReadings(rate < 40, 50, true);
-        tsp.sendToThingSpeak_field3(actual);
-        //Serial.printf("Shear stress: %.2f\n", Utils::shearStress(actual));
+        sendData(rate);
     }
     else {
         Serial.println("Error: setFlow() called with no Event object in routine list.");
     }
 }
 
+void RoutineManager::sendData(int speed) {
+    //tsp.getWifiAndLed();
+    //tsp.sendToThingSpeak_field7(1);
+    //tsp.sendToThingSpeak_field4(rate);
+    //tsp.sendToThingSpeak_field5(speed);
+    //double actual = f->takeAvgNumReadings(speed < 40, 50, false);
+    //tsp.sendToThingSpeak_field3(actual);
+    //Utils::reynolds(actual);
+    Utils::shearStress(speed);
+    //Serial.printf("Shear stress: %.2f\n", Utils::shearStress(actual));
+}
+
 /*
  * Recursively deletes all Tasks in the linked list starting at the provided Task*.
  */
 void RoutineManager::deleteRoutine(Event* node) {
+    if (node == NULL) {
+        return;
+    }
+
     deleteRoutine(node->getNext());
 
     if (node->getNext() == NULL) {
