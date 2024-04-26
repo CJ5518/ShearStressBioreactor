@@ -37,10 +37,12 @@ static String passwordSTA = "";
 //Callback method prototypes
 void wifi_connect_cb();
 void wifi_watchdog_cb();
+bool enable_print();
 
 //Tasks
-Task wifi_connect_task(WIFI_CONNECT_INTERVAL, TASK_FOREVER, &wifi_connect_cb);
+Task wifi_connect_task(0, 1, &wifi_connect_cb);
 Task wifi_watchdog_task(WIFI_WATCHDOG_INTERVAL, TASK_FOREVER, &wifi_watchdog_cb);
+static Task test(0, 1, &wifi_connect_cb);
 
 //Handle error/success messages
 String errorMessageProcessor(const String& var) {
@@ -110,7 +112,7 @@ void GUI::initServer(AsyncWebServer* server) {
             //Check box IS checked
             Serial.println("Setting routerConnect to true!");
             routerConnect = true;
-            wifi_connect_task.enable();
+            test.enable();
         } else {
             //If we get some other number, then something is seriously wrong
             sendErrorMessage(request, 500, "Internal server error, too many params at line " + String(__LINE__));
@@ -206,13 +208,12 @@ void GUI::onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
 // Wi-Fi connect task
 void wifi_connect_cb() {
     // Disable this task to avoid further iterations
-    wifi_connect_task.disable();
+    //wifi_connect_task.disable();
     WiFi.disconnect();
 
-    
     // Connect to Wi-Fi network
     if (routerConnect) {
-        Serial.printf("Trying to connect to router");
+        Serial.println("Trying to connect to router");
         WiFi.enableAP(false);
         //WiFi.config(apIP, apIP, IPAddress(255,255,255,0));
         WiFi.begin(ssidSTA, passwordSTA);
@@ -230,6 +231,7 @@ void wifi_connect_cb() {
             routerConnect = false;
             // Wait and reenable this task to keep trying to connect
             wifi_connect_task.enableDelayed(1000);
+            wifi_connect_task.setIterations(1);
         }
         else if (result == WL_IDLE_STATUS)
         {
@@ -244,7 +246,7 @@ void wifi_connect_cb() {
 
 
     } else {
-        Serial.printf("Making access point");
+        Serial.println("Making access point");
         bool ret = WiFi.enableAP(true);
         ret = WiFi.softAP(ssid, password);
     }
@@ -261,16 +263,18 @@ void GUI::init(Scheduler* ts, RoutineManager* rm) {
     routineManager = rm;
     Serial.printf("In GUI init\n");
 
-    ts->addTask(wifi_connect_task);
-    ts->addTask(wifi_watchdog_task);
-
     taskScheduler = ts;
+    taskScheduler->addTask(wifi_connect_task);
+    taskScheduler->addTask(wifi_watchdog_task);
+    taskScheduler->addTask(test);
+    //test = new Task(0, 1, &wifi_connect_cb, taskScheduler, false);
 
     // Wi-Fi events listener
     WiFi.onEvent(onWifiEvent);
 
     // Wait and enable wifi connect task
     wifi_connect_task.enableDelayed(5000);
+    //wifi_watchdog_task.enable();
     //Ran into some heap issues so we do it like this
     //Which is why the tasks are static
 }
