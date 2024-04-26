@@ -23,18 +23,18 @@ void setup() {
     controller.begin(ModbusSerial, 9600, SERIAL_8N1, MODBUS_RX, MODBUS_TX, 0xEF, MODBUS_ENABLE, 500);
     while (!Serial || !ModbusSerial) {} // wait until connections are ready
 
-    // RoutineManager initialization
-    rm.init(&ts, false); // calls ts.init()
-    //rm.testControl(); // pump control testing
-    //rm.collectFlowRates(); // testing for flow sensor data
-
-    // Init GUI, passing in RoutineManager instance pointer
-    gui.init(&ts, &rm);
-
     // ThingSpeak
     tsp.init();
     //tsp.getWifiAndLed();
     //tsp.getSystemRuntime();
+
+    // RoutineManager initialization
+    rm.init(&ts, true); // calls ts.init()
+    //rm.testControl(); // pump control testing
+    //rm.collectFlowRates(); // testing for flow sensor data
+
+    // Init GUI, passing in RoutineManager instance pointer
+    //gui.init(&ts, &rm);
 
     Serial.println("Setup complete.");
 }
