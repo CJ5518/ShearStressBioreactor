@@ -1,3 +1,11 @@
+/****************************************************************************************************
+ * highFlowSensor.hpp
+ * Carson Sloan
+ * 
+ * Declares the SLF3S4000B (high flow sensor) class, which extends FlowSensor and defines its own
+ * scaleReadings and name functions.
+/*****************************************************************************************************/
+
 #pragma once
 
 #include "flowSensor.hpp"

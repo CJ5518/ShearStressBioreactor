@@ -16,4 +16,3 @@ mods :
 - replaced constexpr with #define (as a Visual Studio user, #define gives better readability than constexpr with IntelliSense)
 
 Tested with STM32 as master, Schneider Telemecanique Altivar VFD + Arduino Nanos running SimpleModbusSlave library.
-

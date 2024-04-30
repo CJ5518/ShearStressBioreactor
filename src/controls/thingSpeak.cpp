@@ -27,8 +27,8 @@
 //#include <ThingSpeak.h>
 #include "thingSpeak.hpp"
 
-//const char *ssid = "AirVandalGuest";       // Replace with your WiFi SSID
-//const char *password = "GoVandals!";       // Replace with your WiFi password
+const char *ssidn = "AirVandalGuest";       // Replace with your WiFi SSID
+const char *passwordn = "GoVandals!";       // Replace with your WiFi password
 
 const int LED_BUILTIN = 2;
 
@@ -49,10 +49,10 @@ void ThingSpeak::init()
         (optional) Print ESP32 IP address and MAC address:
             Serial.print("IP Address: "); Serial.println(WiFi.localIP());
             Serial.print("MAC Address: "); Serial.println(WiFi.macAddress());
-    
+    */
         // Assuming Wi-Fi credentials are already assigned in ssid and password (either directly in code or through GUI)
-        Serial.print("Connecting to "); Serial.println(ssid);
-        WiFi.begin(ssid, password);
+        Serial.print("Connecting to "); Serial.println(ssidn);
+        WiFi.begin(ssidn, passwordn);
         while (WiFi.status() != WL_CONNECTED)
         {
             delay(500);
@@ -60,8 +60,6 @@ void ThingSpeak::init()
         }
         Serial.println("");
         Serial.println("WiFi connected");
-    
-    */
     pinMode(LED_BUILTIN, OUTPUT); // Built-in blue LED on the ESP32 (using this to confirm system ON/OFF)
 }
 

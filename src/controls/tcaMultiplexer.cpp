@@ -1,12 +1,21 @@
-#include <Arduino.h>
-#include <Wire.h>
+/****************************************************************************************************
+ * tcaMultiplexer.cpp
+ * Carson Sloan
+ * 
+ * Defines the I2C_Expander class, which allows communication to either of the two flow sensors that
+ * would otherwise have the same I2C address. It may be possible in the future to remove the need for
+ * the expander if the addresses of the sensors can be set by this process: 
+ * https://sensirion.com/media/documents/15D8B73E/6614FAE3/LQ_AN_SLF3x-I2C-Address-change.pdf.
+/*****************************************************************************************************/
 
 #include "tcaMultiplexer.hpp"
+#include <Wire.h>
 
 /*
  * Select the device at the provided index.
  */
 void I2C_Expander::tcaSelect(uint8_t i) {
+    // The total capacity is 8 devices, but our sensors are at 0 and 1
     if (i > 7) {
         return;
     }

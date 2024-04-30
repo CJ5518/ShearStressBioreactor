@@ -1,3 +1,10 @@
+/****************************************************************************************************
+ * pump.hpp
+ * Carson Sloan
+ * 
+ * Declares the Pump class to be used to communicate with the peristaltic pump.
+/****************************************************************************************************/
+
 #pragma once
 
 #include <YAAJ_ModbusMaster.h>

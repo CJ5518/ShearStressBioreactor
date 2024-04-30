@@ -1,3 +1,11 @@
+/****************************************************************************************************
+ * event.cpp
+ * Carson Sloan
+ * 
+ * Defines the Event class, each object of which represents one required flow rate and its timing
+ * information for part of an experiment.
+/****************************************************************************************************/
+
 #include "event.hpp"
 
 /*

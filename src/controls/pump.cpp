@@ -1,4 +1,10 @@
-#include <Arduino.h>
+/****************************************************************************************************
+ * pump.cpp
+ * Carson Sloan
+ * 
+ * Defines the Pump class, which communicates with the pump using the ModbusMaster library.
+/*****************************************************************************************************/
+
 #include "pump.hpp"
 
 /*
@@ -7,7 +13,7 @@
 Pump::Pump(YAAJ_ModbusMaster _controller) {
     controller = _controller;
 
-    // Check if the pump is already running, in case the ESP restarted during a routine or it was manually enabled
+    // Check if the pump is already running, in case the ESP32 restarted during a routine or it was manually turned on
     checkStatus();
 }
 
@@ -80,6 +86,9 @@ bool Pump::setSpeed(int flow, bool force/* = false*/) {
 
     uint16_t low = 0;
     uint16_t high = 0;
+
+    // TODO: currently only integer flow rates are possible, but the high bytes can be used to 
+    // achieve decimal values, following the calculations done for flow rates over 256 ml/min
 
     // Start with the known register value at the edge of the precision level, then add the needed steps
     if (flow <= STEP_1) {

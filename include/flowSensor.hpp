@@ -1,10 +1,17 @@
+/****************************************************************************************************
+ * flowSensor.hpp
+ * Carson Sloan
+ * 
+ * Declares the FlowSensor class, to be used to communicate with the flow sensors.
+/****************************************************************************************************/
+
 #pragma once
 
 #include <Arduino.h>
 #include <stdint.h>
 
 class FlowSensor {
-    public:
+    private:
         // Commands allowed to be read from serial connection
         enum class Command : int {
             SensorAddress           = (0x08),
@@ -37,6 +44,7 @@ class FlowSensor {
         byte sensorFlowCRC;
         byte sensorTempCRC;
 
+    public:
         void initSensor();
         int16_t readSensor();
         int setLiquid(bool isWater);

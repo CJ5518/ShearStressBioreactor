@@ -1,7 +1,15 @@
-//#define _TASK_TIMECRITICAL      // measure delay between scheduled time and actual start time
-//#define _TASK_STATUS_REQUEST    // use status requests to delay tasks until another has completed
-//#define _TASK_WDT_IDS           // for displaying control points and task IDs for debugging
-#define _TASK_TIMEOUT           // a timeout can be set for when tasks should be deactivated
+/****************************************************************************************************
+ * routineManager.cpp
+ * Carson Sloan
+ * 
+ * Defines the RoutineManager class, which manages all physical bioreactor controls. The run(Event*)
+ * function takes the head of a linked list of events defining the desired experiement to execute.
+ * This is the only function that should be called in normal use cases, though several public test 
+ * functions exist for validating flow rate reading and pump control. The init(Scheduler*) function
+ * must be called before use.
+/*****************************************************************************************************/
+
+#define _TASK_TIMEOUT // allows a timeout to be set for when tasks should be stopped
 
 #include "routineManager.hpp"
 #include "utils.hpp"
@@ -34,8 +42,15 @@ RoutineManager::RoutineManager() {
 /* 
  * Calls init with the provided Scheduler object and test flag.
  */
-RoutineManager::RoutineManager(Scheduler* taskScheduler, bool test) {
+RoutineManager::RoutineManager(Scheduler* taskScheduler, bool test/* = false*/) {
     init(taskScheduler, test);
+}
+
+/*
+ * Destructor for RoutineManager object that deletes the saved routine.
+ */
+RoutineManager::~RoutineManager() {
+    deleteRoutine(head);
 }
 
 /*
@@ -71,7 +86,8 @@ void RoutineManager::init(Scheduler* taskScheduler, bool test) {
 }
 
 /*
- * Collects 2000 flow rate readings and prints them to the serial monitor, with an update on the average rate and sample period every 1000.
+ * Collects flow rate readings and prints them to the serial monitor, with an update on the average 
+ * rate and sample period at the end of each loop.
  */
 void RoutineManager::collectFlowRates() {
     unsigned long start;
@@ -114,7 +130,7 @@ void RoutineManager::testControl() {
 }
 
 /*
- * Manually sets the pump state to the provided value (true = on).
+ * Manually sets the pump state to the provided value (true = on), to allow manual control from the GUI (like for cleaning).
  */
 void RoutineManager::setPump(bool on) {
     p->setPump(on);
@@ -125,8 +141,8 @@ void RoutineManager::setPump(bool on) {
  */
 Event* RoutineManager::buildTestRoutine() {
     // Spend 0.5 seconds at 5.5 ml/min, then 0.5 seconds off
-    Event* lowFlow1 = new Event(5.5f, 15000, 10, 15000); // the complete constructor could be used also: Task(5.5f, 500, 1, 500)
-    Event* lowFlow2 = new Event(20.0f, 15000, 10, 15000);
+    Event* lowFlow1 = new Event(30.0f, 20000, 15, 20000); // the complete constructor could be used also: Task(5.5f, 500, 1, 500)
+    Event* lowFlow2 = new Event(40.0f, 20000, 15, 20000);
     lowFlow1->setNext(lowFlow2);
     /*Event* lowFlow3 = new Event(15.5f, 15000); // stay at 15.5 ml/min for 1 sec (no off cycle)
     lowFlow2->setNext(lowFlow3);
@@ -146,7 +162,7 @@ Event* RoutineManager::buildTestRoutine() {
 }
 
 /*
- * Returns true if a routine is currently being run.
+ * Returns true if a routine is currently being run, to allow the GUI to display the current status.
  */
 bool RoutineManager::isRunning() {
     return running;
@@ -204,7 +220,7 @@ void RoutineManager::run() {
     // When a flow rate of 0 is requested, or this is an odd repetition in a cycle with specified offDuration, turn off the pump
     if (head->getFlow() == 0 || offCycle) {
         p->setPump(false);
-        tsp.sendToThingSpeak_field6(0); // 5 for pump speed
+        tsp.sendToThingSpeak_field3(0); // 5 for pump speed
     }
     else {
         // Try to achieve this flow rate with the flowManager, with a timeout set
@@ -243,15 +259,19 @@ void RoutineManager::setFlow() {
     }
 }
 
+/*
+ * Calls the relevant functions to send data to thingspeak. Unfortunately, with the free plan only 1 value 
+ * can be sent every 15 seconds.
+ */
 void RoutineManager::sendData(int speed) {
     //tsp.getWifiAndLed();
     //tsp.sendToThingSpeak_field7(1);
-    //tsp.sendToThingSpeak_field4(rate);
+    //tsp.sendToThingSpeak_field4(speed);
     //tsp.sendToThingSpeak_field5(speed);
-    //double actual = f->takeAvgNumReadings(speed < 40, 50, false);
-    //tsp.sendToThingSpeak_field3(actual);
+    double actual = f->takeAvgNumReadings(speed <= 40, 50, true);
+    tsp.sendToThingSpeak_field3(actual);
     //Utils::reynolds(actual);
-    Utils::shearStress(speed);
+    //Utils::shearStress(speed);
     //Serial.printf("Shear stress: %.2f\n", Utils::shearStress(actual));
 }
 

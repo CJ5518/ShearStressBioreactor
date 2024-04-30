@@ -1,3 +1,11 @@
+/****************************************************************************************************
+ * routineManager.hpp
+ * Carson Sloan
+ * 
+ * Declares the RoutineManager class and member functions. In the future, most of the global
+ * variables declared in routineManager.cpp should be moved to this class as private fields.
+/****************************************************************************************************/
+
 #pragma once
 
 #include "event.hpp"
@@ -10,17 +18,19 @@
 class RoutineManager {
     public:
         RoutineManager();
-        RoutineManager(Scheduler* taskScheduler, bool test);
+        RoutineManager(Scheduler* taskScheduler, bool test = false);
+        ~RoutineManager();
 
         void init(Scheduler* ts, bool test);
         void run(Event* head);
         static void deleteRoutine(Event* head);
-        static void sendData(int speed);
 
+        // Test functions
         void collectFlowRates();
         void testControl();
-        void setPump(bool on);
 
+        // GUI helper functions
+        void setPump(bool on);
         bool isRunning();
 
         // Callback functions
@@ -29,4 +39,5 @@ class RoutineManager {
     private:
         Event* buildTestRoutine();
         static bool running;
+        static void sendData(int speed);
 };

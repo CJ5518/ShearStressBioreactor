@@ -1,3 +1,10 @@
+/****************************************************************************************************
+ * highFlowSensor.cpp
+ * Carson Sloan
+ * 
+ * Defines the SLF3S4000B class for functions specific to the high flow sensor.
+/*****************************************************************************************************/
+
 #include "highFlowSensor.hpp"
 
 /*

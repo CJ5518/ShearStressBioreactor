@@ -1,3 +1,10 @@
+/****************************************************************************************************
+ * stepperMotor.hpp
+ * Carson Sloan
+ * 
+ * Declares the StepperMotor class, each object of which controls a microstep driver.
+/*****************************************************************************************************/
+
 #pragma once
 
 class StepperMotor {

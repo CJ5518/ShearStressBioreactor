@@ -1,3 +1,11 @@
+/****************************************************************************************************
+ * lowFlowSensor.hpp
+ * Carson Sloan
+ * 
+ * Declares the SLF3S1300F (low flow sensor) class, which extends FlowSensor and defines its own
+ * scaleReadings and name functions.
+/*****************************************************************************************************/
+
 #pragma once
 
 #include "flowSensor.hpp"

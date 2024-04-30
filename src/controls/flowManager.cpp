@@ -1,3 +1,12 @@
+/****************************************************************************************************
+ * flowManager.cpp
+ * Carson Sloan
+ * 
+ * Defines the FlowManager class, which reads from the flow sensors and controls the pump and valves.
+ * The setFlow function was designed for a different hardware setup and should be adapted to the new
+ * valve layout before use. The FlowManager(Pump*) constructor must be called in setup.
+/****************************************************************************************************/
+
 #include "flowManager.hpp"
 
 /*
@@ -16,6 +25,7 @@ void FlowManager::init() {
     // High flow sensor is connected as device 1
     tca.init(LOW_ADDRESS, HIGH_ADDRESS);
 
+    // PID controls were removed once the tubing layout was changed
     /*pid.begin();
     pid.tune(0.1, 0.5, 0.3); // kP, kI, kD
     pid.limit(MIN_SPEED, MAX_SPEED);*/
@@ -33,7 +43,8 @@ void FlowManager::init() {
 }
 
 /*
- * Opens the relevant valve until the target flow rate is achieved.
+ * Opens the relevant valve until the target flow rate is achieved. This function is currently unused
+ * since the valve layout was changed at the end of the project.
  */
 void FlowManager::setFlow(float targetFlow) {
     bool lowFlowSys; // whether the low valve should be used
@@ -68,7 +79,7 @@ void FlowManager::setFlow(float targetFlow) {
     lastSys = lowFlowSys;
 
     // Repeat until the current flow rate is close to the target
-    // TODO: remove the loop, call this function multiple times from main loop with interrupts
+    // TODO: remove the loop, recursively schedule this function if the flow rate is not in range
     while (!flowInRange) {
         avg10Readings = 0;
         
@@ -90,6 +101,7 @@ void FlowManager::setFlow(float targetFlow) {
             pid.setpoint(targetFlow);
             ticksToDrive = pid.compute(avg10Readings); // controller will return the ticks to drive the stepper
 
+            // TODO: If the flow is less than the target, but the pump speed is higher, the bypass valve should
             // If the current flow rate is greater than the target flow rate
             if (avg10Readings > targetFlow) {
                 // Close the valve
@@ -102,6 +114,7 @@ void FlowManager::setFlow(float targetFlow) {
                 motorTicks += ticksToDrive;
             }
             
+            // TODO: There is now only 1 valve for both high and low flow rates
             // Step the relevant motor the number of ticks that was just determined
             if (lowFlowSys) {
                 lowMotor.driveMotor(ticksToDrive, openValve);
@@ -111,7 +124,7 @@ void FlowManager::setFlow(float targetFlow) {
             }
 
             // Wait for flow rate to adjust
-            delay(500); // TODO: update delay for new pump and replace with schedule call in main loop
+            delay(500); // TODO: will be removed when scheduling implemented
         }
     }
 
@@ -123,9 +136,10 @@ void FlowManager::setFlow(float targetFlow) {
 }
 
 /*
- * Reads from the specified flow sensor the requested number of times, and returns the average value.
+ * Reads from the specified flow sensor the requested number of times, and returns the average value. If true is provided for
+ * the print parameter, every flow rate will be printed to serial.
  */
-float FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings, bool print) {
+float FlowManager::takeAvgNumReadings(bool lowFlow, int numReadings, bool print/* = false*/) {
     float avg = 0.0;
     float reading;
 

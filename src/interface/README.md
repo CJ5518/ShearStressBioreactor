@@ -1,4 +1,4 @@
-# Shear Stress Bioreactor - Controls
+# Shear Stress Bioreactor - Interface
 This folder contains the software which provides the user interface of the project.
 
 # On building

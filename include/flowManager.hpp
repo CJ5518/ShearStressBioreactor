@@ -1,3 +1,10 @@
+/****************************************************************************************************
+ * flowManager.hpp
+ * Carson Sloan
+ * 
+ * Declares the FlowManager class and member functions.
+/****************************************************************************************************/
+
 #pragma once
 
 #include "pump.hpp"
@@ -45,6 +52,6 @@ class FlowManager {
         FlowManager(Pump* p);
         void setFlow(float tgtFlowRate);
         void closeFlow(bool lowFlow);
-        float takeAvgNumReadings(bool lowFlow, int numReadings, bool print);
+        float takeAvgNumReadings(bool lowFlow, int numReadings, bool print = false);
 };
 

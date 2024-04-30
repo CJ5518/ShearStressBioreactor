@@ -1,6 +1,12 @@
-#include <Arduino.h>
+/****************************************************************************************************
+ * stepperMotor.cpp
+ * Carson Sloan
+ * 
+ * Defines the StepperMotor class, which controls the microstep driver pins to move the stepper motor.
+/*****************************************************************************************************/
 
 #include "stepperMotor.hpp"
+#include <Arduino.h>
 
 /*
  * Sets the ENA input of the stepper driver based on the given state.

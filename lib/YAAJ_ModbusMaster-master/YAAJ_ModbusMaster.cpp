@@ -1,6 +1,7 @@
 /*
-
 	YAAJ_ModbusMaster.cpp
+
+	NOTE: Small changes were made to the begin function for the ShearStressBioreactor project.
 
 	Forked from : https://github.com/4-20ma/ModbusMaster
 

@@ -1,3 +1,9 @@
+/****************************************************************************************************
+ * event.hpp
+ * Carson Sloan
+ * 
+ * Declares the Event class and member functions to be used by the GUI for setting task parameters.
+/****************************************************************************************************/
 #pragma once
 
 #include <Arduino.h>

@@ -1,9 +1,15 @@
-#include "flowSensor.hpp"
+/****************************************************************************************************
+ * flowSensor.cpp
+ * Carson Sloan
+ * 
+ * Defines the FlowSensor class, to be used to communicate with the flow sensors.
+/****************************************************************************************************/
 
+#include "flowSensor.hpp"
 #include <Wire.h>
 
 /*
- * Reset the flow sensor.
+ * Resets the flow sensor.
  */
 void FlowSensor::initSensor() {
     int ret;

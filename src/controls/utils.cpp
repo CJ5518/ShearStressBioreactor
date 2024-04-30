@@ -1,5 +1,13 @@
+/****************************************************************************************************
+ * utils.cpp
+ * Carson Sloan
+ * 
+ * Defines utility functions for calculating the Reynolds number for the flow through the bioreactor,
+ * and transforming between flow rate and shear stress. The calculations are sent to the relevant
+ * ThingSpeak fields automatically.
+/****************************************************************************************************/
+
 #include "utils.hpp"
-//#include <Arduino.h>
 #include "thingSpeak.hpp"
 
 extern ThingSpeak tsp;

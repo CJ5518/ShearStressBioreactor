@@ -1,3 +1,10 @@
+/****************************************************************************************************
+ * lowFlowSensor.cpp
+ * Carson Sloan
+ * 
+ * Defines the SLF3S1300F class for functions specific to the low flow sensor.
+/*****************************************************************************************************/
+
 #include "lowFlowSensor.hpp"
 
 /*
