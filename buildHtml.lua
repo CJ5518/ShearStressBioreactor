@@ -1,4 +1,4 @@
---Builds html.hpp
+--Builds html.hpp (Carson Rueber)
 --Because writing this script was legitimately much easier than figuring out SPIFFS
 
 --Usage: lua buildHtml.lua

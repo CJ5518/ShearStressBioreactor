@@ -1,5 +1,5 @@
-//Routine Manager code
-//Drive the routine manager GUI
+//Routine Manager code (Carson Rueber)
+//Drives the routine manager GUI
 
 
 //Collect various document elements
@@ -7,6 +7,7 @@ var firstEntry = document.getElementsByClassName("routineManagerEntry")[1];
 var entryList = document.getElementById("entries");
 var timeText = document.getElementById("routineTime");
 var statusHeader = document.getElementById("statusHeader");
+//Keep track of how many entries there are
 var numEntries = 1;
 
 //Create a new entry, a group of 4 fields
@@ -125,4 +126,5 @@ function updateStatus() {
 	xhr.send();
 }
 
+//Update the status periodically
 setInterval(updateStatus, 1000);

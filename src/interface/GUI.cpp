@@ -1,4 +1,4 @@
-//Implements GUI.hpp
+//Implements GUI.hpp (Carson Rueber)
 #include "GUI.hpp"
 
 #include "WiFi.h"
@@ -6,7 +6,7 @@
 
 #include "Preferences.h"
 
-//This code adapted from:
+//This code contains adaptions from:
 //https://web.archive.org/web/20240213064921/https://gist.githubusercontent.com/evert-arias/
 //d0abf2769802e56c88793a4447fe9f7e/raw/b1f582f8cdcaa07f84072ede8687bdbe9045e75a/esp32-wifi-auto-connect.cpp
 
@@ -61,6 +61,8 @@ String successMessageProcessor(const String& var) {
     return String();
 }
 
+//Helper functions to send error/success messages
+//Didn't end up being used too often in the final version
 void sendErrorMessage(AsyncWebServerRequest* request, int code, const String &message) {
     errorCode = code;
     errorMessage = message;
@@ -140,6 +142,7 @@ void GUI::initServer(AsyncWebServer* server) {
         }
     });
 
+    //Is a routine running? Clients want to know
     server->on("/isRoutineRunning", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/plain", routineManager->isRunning() ? "yes" : "no");
     });
@@ -174,7 +177,6 @@ void GUI::initServer(AsyncWebServer* server) {
     });
     server->on("/", HTTP_ANY, [](AsyncWebServerRequest *request) {
         request->redirect("/index.html");
-        Serial.printf("%d, %d, At %d", wifi_watchdog_task.isEnabled(), wifi_connect_task.isEnabled(), __LINE__);
     });
 
 
@@ -184,12 +186,13 @@ void GUI::initServer(AsyncWebServer* server) {
 }
 
 // Wi-Fi events
-//Default wifi event definitions are WRONG so we use the number 10 instead
+//Default wifi event definitions are WRONG so we hardcode the number 10 instead
 void GUI::onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
     Serial.printf("Got event %d - %s\n", event, WiFi.eventName(event));
     switch (event) {
         case 10: {
             Serial.printf("AP Starting\n");
+            //Set our custom IP address
             WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
 
             delay(800);
@@ -198,9 +201,6 @@ void GUI::onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
                 server = new AsyncWebServer(80);
                 initServer(server);
             }
-        } break;
-        case WIFI_EVENT_WIFI_READY: {
-            
         } break;
     }
 }
@@ -275,8 +275,6 @@ void GUI::init(Scheduler* ts, RoutineManager* rm) {
     // Wait and enable wifi connect task
     wifi_connect_task.enableDelayed(5000);
     //wifi_watchdog_task.enable();
-    //Ran into some heap issues so we do it like this
-    //Which is why the tasks are static
 }
 
 //Clean up
